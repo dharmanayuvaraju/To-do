@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "telugu": "నీ ఆరోగ్యమే మన బేబీ ఆరోగ్యం. మందులు వేసుకో బంగారం ❤️",
+    "english": "Your health is our baby's health. Take your medicines, bangaram ❤️",
+    "isCustom": false
+  },
+  {
+    "id": 2,
+    "telugu": "మందులు మర్చిపోతే మన బేబీకి ఇబ్బంది అవుతుంది. ఇప్పుడే వేసుకో 🙏",
+    "english": "If you forget medicines it troubles our baby. Please take it now 🙏",
+    "isCustom": false
+  },
+  {
+    "id": 3,
+    "telugu": "నువ్వు బాగుంటేనే నేను బాగుంటాను. టాబ్లెట్ వేసుకున్నావా?",
+    "english": "I am fine only if you are fine. Did you take your tablet?",
+    "isCustom": false
+  },
+  {
+    "id": 4,
+    "telugu": "నా ప్రాణం నువ్వే, మన బేబీ కూడా. మందు టైమ్ అయింది!",
+    "english": "You are my life, and our baby too. It's medicine time!",
+    "isCustom": false
+  },
+  {
+    "id": 5,
+    "telugu": "ఒక్క టాబ్లెట్... మన బేబీకి ఒక పెద్ద బహుమతి 🍼",
+    "english": "Just one tablet... is a big gift for our baby 🍼",
+    "isCustom": false
+  },
+  {
+    "id": 6,
+    "telugu": "నా కోసం కాదు, మన బేబీ కోసం వేసుకో చిన్నా 💕",
+    "english": "Not for me, take it for our baby chinna 💕",
+    "isCustom": false
+  },
+  {
+    "id": 7,
+    "telugu": "ఇప్పుడే వేసుకో, తర్వాత నాకు మెసేజ్ చెయ్యి ❤️",
+    "english": "Take it right now, and message me after ❤️",
+    "isCustom": false
+  }
+]
