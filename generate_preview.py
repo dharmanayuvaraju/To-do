@@ -4,6 +4,7 @@ import os
 images_dir = 'assets/images'
 star_path = os.path.join(images_dir, 'hero_star.jpg')
 together_path = os.path.join(images_dir, 'together_love.jpg')
+todo_icon_path = os.path.join(images_dir, 'todo_icon.png')
 
 def get_b64(path):
     if os.path.exists(path):
@@ -13,6 +14,7 @@ def get_b64(path):
 
 star_b64 = get_b64(star_path)
 together_b64 = get_b64(together_path)
+todo_icon_b64 = get_b64(todo_icon_path)
 
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -86,8 +88,8 @@ html_content = f"""<!DOCTYPE html>
 
   <!-- Top Simulator Control Header -->
   <div class="w-full max-w-md flex items-center justify-between py-2 px-4 mb-2 text-white">
-    <div class="flex items-center gap-2">
-      <span class="text-xl">🌸</span>
+    <div class="flex items-center gap-2.5">
+      <img src="{todo_icon_b64}" class="w-8 h-8 rounded-xl shadow-md border border-amber-200/50">
       <div>
         <h1 class="text-sm font-bold tracking-wide">Do It Now</h1>
         <p class="text-[11px] text-pink-300">Love from Babu ❤️</p>
@@ -839,7 +841,7 @@ html_content = f"""<!DOCTYPE html>
     }}
 
     function snoozeAlarm() {{
-      alert('Alarm snoozed for 10 minutes! Will remind again lovingly 💕');
+      alert('musukoni mundu vesuko! 😠❤️\n\nSnooze cheyoddu bangaram! Ippude vesuko please... Sare 10m tharvatha malli alert avthundi!');
       switchScreen('home');
     }}
 

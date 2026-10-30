@@ -348,8 +348,8 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       snoozeId,
-      '⏳ Snooze Ended',
-      '${quote.telugu}\nTime for ${medicineName}!',
+      '😠❤️ musukoni mundu vesuko!',
+      'Chalu inka snooze chesindi! Ippude $medicineName vesuko bangaram ❤️',
       snoozeTarget,
       NotificationDetails(android: androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

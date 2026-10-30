@@ -23,7 +23,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
 
   String _doseUnit = 'None / Reminder';
   List<TimeOfDay> _times = [const TimeOfDay(hour: 9, minute: 0)];
-  List<int> _daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
+  List<int> _daysOfWeek = []; // No default everyday - selected purely by her choice
   int _selectedColor = 0xFFF8C8DC;
 
   final List<String> _doseUnits = [
@@ -108,6 +108,12 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
       );
       return;
     }
+    if (_daysOfWeek.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least 1 day for this reminder')),
+      );
+      return;
+    }
 
     final doseText = _doseController.text.trim();
 
@@ -117,7 +123,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
       dose: doseText.isEmpty ? '1' : doseText,
       doseUnit: _doseUnit,
       times: _times,
-      daysOfWeek: _daysOfWeek.isEmpty ? [1, 2, 3, 4, 5, 6, 7] : _daysOfWeek,
+      daysOfWeek: _daysOfWeek,
       note: _noteController.text.trim(),
       colorValue: _selectedColor,
       isActive: widget.medicine?.isActive ?? true,
@@ -349,15 +355,66 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Repeat Days',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.blushPink : AppColors.deepPlum,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Repeat Days (Her Choice)',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.blushPink : AppColors.deepPlum,
+                          ),
+                        ),
+                        if (_daysOfWeek.isNotEmpty)
+                          GestureDetector(
+                            onTap: () => setState(() => _daysOfWeek.clear()),
+                            child: Text(
+                              'Clear',
+                              style: GoogleFonts.poppins(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Quick selector shortcuts
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ActionChip(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            label: Text('Today Only', style: GoogleFonts.poppins(fontSize: 11)),
+                            onPressed: () {
+                              setState(() {
+                                _daysOfWeek = [DateTime.now().weekday];
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 6),
+                          ActionChip(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            label: Text('Mon - Fri', style: GoogleFonts.poppins(fontSize: 11)),
+                            onPressed: () {
+                              setState(() {
+                                _daysOfWeek = [1, 2, 3, 4, 5];
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 6),
+                          ActionChip(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            label: Text('Everyday', style: GoogleFonts.poppins(fontSize: 11)),
+                            onPressed: () {
+                              setState(() {
+                                _daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(7, (i) {
@@ -369,11 +426,10 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                           onTap: () {
                             setState(() {
                               if (isSelected) {
-                                if (_daysOfWeek.length > 1) {
-                                  _daysOfWeek.remove(dayNumber);
-                                }
+                                _daysOfWeek.remove(dayNumber);
                               } else {
                                 _daysOfWeek.add(dayNumber);
+                                _daysOfWeek.sort();
                               }
                             });
                           },
@@ -408,6 +464,19 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                           ),
                         );
                       }),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _daysOfWeek.isEmpty
+                          ? 'No days selected. Tap circles above to choose.'
+                          : _daysOfWeek.length == 7
+                              ? 'Repeating Everyday ❤️'
+                              : 'Selected ${_daysOfWeek.length} day(s) a week',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: _daysOfWeek.isEmpty ? Colors.amber : (isDark ? AppColors.lavender : Colors.grey[600]),
+                      ),
                     ),
                   ],
                 ),

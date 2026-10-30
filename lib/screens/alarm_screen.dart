@@ -95,7 +95,74 @@ class _AlarmScreenState extends State<AlarmScreen> {
     }
   }
 
-  void _onSnooze() async {
+  void _onSnooze() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: AppColors.nightPlum,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('😠', style: TextStyle(fontSize: 26)),
+            const SizedBox(width: 8),
+            Text(
+              'musukoni mundu vesuko!',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: AppColors.blushPink,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('❤️', style: TextStyle(fontSize: 22)),
+          ],
+        ),
+        content: Text(
+          'Snooze cheyoddu bangaram! Ippude vesuko please... Sare ${_storage.snoozeDurationMinutes}m tharvatha malli ring chestha!',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: Colors.white.withOpacity(0.9),
+            height: 1.4,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeSnooze();
+            },
+            child: Text(
+              'Snooze ${_storage.snoozeDurationMinutes}m ⏳',
+              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.blushPink,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _onTaken();
+            },
+            child: Text(
+              'Ippude Vesukunta! ❤️',
+              style: GoogleFonts.poppins(
+                color: AppColors.deepPlum,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _executeSnooze() async {
     if (_isActionTaken) return;
     _isActionTaken = true;
     _stopAlertEffects();
@@ -118,8 +185,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
         SnackBar(
           backgroundColor: AppColors.deepPlum,
           content: Text(
-            '${_storage.snoozeDurationMinutes} minutes tharvatha malli gurthuchestha bangaram! ⏳',
-            style: GoogleFonts.poppins(color: Colors.white),
+            'musukoni mundu vesuko! 😠❤️ (${_storage.snoozeDurationMinutes}m tharvatha malli alert avthundi)',
+            style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
       );
