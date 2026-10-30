@@ -179,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Text(
                     'For my dearest $herName ❤️ With love from $myName',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.notoSansTelugu(
+                    style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: AppColors.deepPlum,

@@ -24,21 +24,21 @@ class _MessageScreenState extends State<MessageScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'ప్రేమ లేఖను సవరించు / Edit Note',
-          style: GoogleFonts.notoSansTelugu(fontSize: 16, fontWeight: FontWeight.bold),
+          'Edit Love Note',
+          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
           maxLines: 7,
           decoration: InputDecoration(
-            hintText: 'నీ బంగారం కోసం ప్రేమతో ఒక మంచి సందేశం రాయి...',
+            hintText: 'Write a loving message for your bangaram...',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('రద్దు / Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -53,8 +53,8 @@ class _MessageScreenState extends State<MessageScreen> {
               if (ctx.mounted) Navigator.pop(ctx);
             },
             child: Text(
-              'సేవ్ చెయ్యి / Save',
-              style: GoogleFonts.notoSansTelugu(color: AppColors.deepPlum, fontWeight: FontWeight.bold),
+              'Save Note',
+              style: GoogleFonts.poppins(color: AppColors.deepPlum, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -209,11 +209,11 @@ class _MessageScreenState extends State<MessageScreen> {
                       const Divider(color: Color(0xFFE8D3C0), thickness: 1),
                       const SizedBox(height: 12),
 
-                      // Hand-written Telugu Text
+                      // Hand-written Love Note
                       Text(
                         displayNote,
-                        style: GoogleFonts.notoSansTelugu(
-                          fontSize: 15,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
                           height: 1.6,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF33202C),

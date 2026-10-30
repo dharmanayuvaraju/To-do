@@ -29,14 +29,14 @@ class BloomingFlowerWidget extends StatelessWidget {
                     : 4;
 
     final String stageTelugu = streakDays == 0
-        ? 'మొలకెత్తే సమయం 🌱'
+        ? 'Molakaththe Samayam 🌱'
         : streakDays <= 2
-            ? 'చిగురిస్తున్న మొక్క 🌿'
+            ? 'Chiguristunna Mokka 🌿'
             : streakDays <= 4
-                ? 'మొగ్గ తొడుగుతోంది 🌷'
+                ? 'Mogga Thoduguthondi 🌷'
                 : streakDays <= 6
-                    ? 'వికసిస్తున్న పువ్వు 🌸'
-                    : 'పూర్తిగా వికసించిన ప్రేమ పువ్వు! 🌺✨';
+                    ? 'Vikasistunna Puvvu 🌸'
+                    : 'Poorthiga Vikasincha Prema Puvvu! 🌺✨';
 
     final String stageEnglish = streakDays == 0
         ? 'A new seed planted with love'

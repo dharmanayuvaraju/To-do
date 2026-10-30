@@ -3,23 +3,23 @@ import 'package:intl/intl.dart';
 
 class AppDateUtils {
   static const List<String> teluguDays = [
-    'ఆదివారం',
-    'సోమవారం',
-    'మంగళవారం',
-    'బుధవారం',
-    'గురువారం',
-    'శుక్రవారం',
-    'శనివారం',
+    'Aadivaram',
+    'Somavaram',
+    'Mangalavaram',
+    'Budhavaram',
+    'Guruvaram',
+    'Shukravaram',
+    'Shanivaram',
   ];
 
   static const List<String> teluguShortDays = [
-    'ఆది',
-    'సోమ',
-    'మంగళ',
-    'బుధ',
-    'గురు',
-    'శుక్ర',
-    'శని',
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
   ];
 
   static const List<String> englishShortDays = [
@@ -47,19 +47,19 @@ class AppDateUtils {
 
     final timeStr = DateFormat('hh:mm a').format(dt);
     if (today == target) {
-      return 'ఈరోజు / Today, $timeStr';
+      return 'Today, $timeStr';
     } else if (today.difference(target).inDays == 1) {
-      return 'నిన్న / Yesterday, $timeStr';
+      return 'Yesterday, $timeStr';
     } else {
       return '${DateFormat('d MMM').format(dt)}, $timeStr';
     }
   }
 
-  /// Get Short Bilingual Day Label (e.g. "Mon / సోమ")
+  /// Get Short Day Label (e.g. "Mon")
   static String getBilingualDay(int weekdayIndex) {
     // DateTime weekday: 1 = Monday, 7 = Sunday
     final engIndex = weekdayIndex % 7;
-    return '${englishShortDays[engIndex]} / ${teluguShortDays[engIndex]}';
+    return englishShortDays[engIndex];
   }
 
   /// Date string in YYYY-MM-DD for grouping

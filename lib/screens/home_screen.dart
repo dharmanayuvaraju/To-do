@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 24,
               ),
               label: Text(
-                'Add Medicine',
+                'Add Reminder',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -471,8 +471,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 SnackBar(
                   backgroundColor: AppColors.deepPlum,
                   content: Text(
-                    'టెస్ట్ అలారమ్ 4 సెకన్లలో రింగ్ అవుతుంది! / Test alarm in 4s',
-                    style: GoogleFonts.notoSansTelugu(color: Colors.white),
+                    'Test alarm will ring in 4 seconds! 🔔',
+                    style: GoogleFonts.poppins(color: Colors.white),
                   ),
                 ),
               );
@@ -508,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   _currentQuote.telugu,
-                  style: GoogleFonts.notoSansTelugu(
+                  style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     height: 1.4,

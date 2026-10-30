@@ -12,7 +12,7 @@ class SlideToConfirm extends StatefulWidget {
   const SlideToConfirm({
     super.key,
     required this.onConfirmed,
-    this.text = 'Slide to take ❤️ / తీసుకున్నాను అని జరపండి',
+    this.text = 'Slide to take ❤️',
     this.height = 64.0,
     this.borderRadius = 32.0,
   });
@@ -51,7 +51,7 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                   child: Text(
                     widget.text,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.notoSansTelugu(
+                    style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Colors.white.withOpacity(0.9),

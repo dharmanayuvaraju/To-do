@@ -153,11 +153,11 @@ class MedicineCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Medicine Name (Telugu & English)
+          // Reminder Name
           Text(
             medicine.name,
-            style: GoogleFonts.notoSansTelugu(
-              fontSize: 19,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : AppColors.deepPlum,
             ),
@@ -178,8 +178,8 @@ class MedicineCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     medicine.note,
-                    style: GoogleFonts.notoSansTelugu(
-                      fontSize: 13,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
                       fontStyle: FontStyle.italic,
                       color: isDark
                           ? AppColors.softPeach

@@ -27,8 +27,8 @@ class StorageService extends ChangeNotifier {
   bool _isSoundEnabled = true;
   bool _isVibrationEnabled = true;
   bool _isDarkMode = false;
-  String _photoStyle = 'nature'; // 'nature' (discreet/botanical) or 'couple'
-  bool _lockScreenPrivacy = true; // Always use discreet nature on lock screen / off screen
+  String _photoStyle = 'couple'; // 'nature' or 'couple' (Sweet Photos)
+  bool _lockScreenPrivacy = false; // Always use discreet nature on lock screen / off screen
 
   // Getters
   bool get isInitialized => _isInitialized;
@@ -59,8 +59,8 @@ class StorageService extends ChangeNotifier {
     _isSoundEnabled = _prefs.getBool(AppConstants.keySoundEnabled) ?? true;
     _isVibrationEnabled = _prefs.getBool(AppConstants.keyVibrationEnabled) ?? true;
     _isDarkMode = _prefs.getBool(AppConstants.keyDarkMode) ?? false;
-    _photoStyle = _prefs.getString(AppConstants.keyPhotoStyle) ?? 'nature';
-    _lockScreenPrivacy = _prefs.getBool(AppConstants.keyLockScreenPrivacy) ?? true;
+    _photoStyle = _prefs.getString(AppConstants.keyPhotoStyle) ?? 'couple';
+    _lockScreenPrivacy = _prefs.getBool(AppConstants.keyLockScreenPrivacy) ?? false;
 
     // Load Medicines
     final medJson = _prefs.getString(AppConstants.keyMedicines);

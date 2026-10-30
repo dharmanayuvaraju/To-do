@@ -46,3 +46,4 @@ for folder, size in densities.items():
     print(f"Generated {folder}/ic_launcher.png ({size}x{size})")
 
 print("ALL MIPMAP ICONS GENERATED SUCCESSFULLY!")
+

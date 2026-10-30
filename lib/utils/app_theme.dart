@@ -16,28 +16,28 @@ class AppTheme {
         onPrimary: Colors.white,
         onSecondary: AppColors.deepPlum,
       ),
-      textTheme: GoogleFonts.notoSansTeluguTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.ramabhadra(
+      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).copyWith(
+        displayLarge: GoogleFonts.poppins(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: AppColors.deepPlum,
         ),
-        headlineMedium: GoogleFonts.notoSansTelugu(
+        headlineMedium: GoogleFonts.poppins(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: AppColors.deepPlum,
         ),
-        titleLarge: GoogleFonts.notoSansTelugu(
+        titleLarge: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.deepPlum,
         ),
-        bodyLarge: GoogleFonts.notoSansTelugu(
+        bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: const Color(0xFF4A3E59),
         ),
-        bodyMedium: GoogleFonts.notoSansTelugu(
+        bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
           color: const Color(0xFF6B5F79),
         ),
@@ -71,28 +71,28 @@ class AppTheme {
         onPrimary: AppColors.nightIndigo,
         onSecondary: Colors.white,
       ),
-      textTheme: GoogleFonts.notoSansTeluguTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.ramabhadra(
+      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).copyWith(
+        displayLarge: GoogleFonts.poppins(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
-        headlineMedium: GoogleFonts.notoSansTelugu(
+        headlineMedium: GoogleFonts.poppins(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
-        titleLarge: GoogleFonts.notoSansTelugu(
+        titleLarge: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        bodyLarge: GoogleFonts.notoSansTelugu(
+        bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: const Color(0xFFDED5EA),
         ),
-        bodyMedium: GoogleFonts.notoSansTelugu(
+        bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
           color: const Color(0xFFB5A7C6),
         ),

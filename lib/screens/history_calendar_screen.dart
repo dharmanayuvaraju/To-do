@@ -289,16 +289,16 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${DateFormat('d MMMM yyyy').format(_selectedDate)} డోసులు',
-                style: GoogleFonts.notoSansTelugu(
-                  fontSize: 16,
+                DateFormat('d MMMM yyyy').format(_selectedDate),
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : AppColors.deepPlum,
                 ),
               ),
               Text(
-                '${selectedLogs.length} రికార్డులు',
-                style: GoogleFonts.notoSansTelugu(
+                '${selectedLogs.length} records',
+                style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: isDark ? AppColors.lavender : const Color(0xFF7A6A8D),
                 ),
@@ -318,8 +318,8 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
                     const Icon(Icons.event_note_rounded, color: AppColors.lavender, size: 40),
                     const SizedBox(height: 8),
                     Text(
-                      'ఈ రోజుకు ఎలాంటి లాగ్స్ లేవు',
-                      style: GoogleFonts.notoSansTelugu(
+                      'No Reminders Logged',
+                      style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : AppColors.deepPlum,
@@ -385,8 +385,8 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
                         children: [
                           Text(
                             log.medicineName,
-                            style: GoogleFonts.notoSansTelugu(
-                              fontSize: 15,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : AppColors.deepPlum,
                             ),

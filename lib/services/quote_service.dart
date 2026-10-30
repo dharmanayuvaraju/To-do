@@ -24,41 +24,41 @@ class QuoteService {
       }
       _isLoaded = true;
     } catch (e) {
-      // Fallback 7 quotes in case asset loading fails
+      // Fallback quotes (Telugu written in English letters so she can read easily)
       _defaultQuotes.addAll([
         TeluguQuote(
           id: 1,
-          telugu: "నీ ఆరోగ్యమే మన బేబీ ఆరోగ్యం. మందులు వేసుకో బంగారం ❤️",
+          telugu: "Nee arogyame mana baby arogyam. Mandulu vesuko bangaram ❤️",
           english: "Your health is our baby's health. Take your medicines, bangaram ❤️",
         ),
         TeluguQuote(
           id: 2,
-          telugu: "మందులు మర్చిపోతే మన బేబీకి ఇబ్బంది అవుతుంది. ఇప్పుడే వేసుకో 🙏",
+          telugu: "Mandulu marchipothe mana baby ki ibbandi avthundi. Ippude vesuko 🙏",
           english: "If you forget medicines it troubles our baby. Please take it now 🙏",
         ),
         TeluguQuote(
           id: 3,
-          telugu: "నువ్వు బాగుంటేనే నేను బాగుంటాను. టాబ్లెట్ వేసుకున్నావా?",
+          telugu: "Nuvvu baagunte nenu baaguntanu. Tablet vesukunnava? ❤️",
           english: "I am fine only if you are fine. Did you take your tablet?",
         ),
         TeluguQuote(
           id: 4,
-          telugu: "నా ప్రాణం నువ్వే, మన బేబీ కూడా. మందు టైమ్ అయింది!",
+          telugu: "Naa pranam nuvve, mana baby kooda. Mandu time ayindi! 🍼",
           english: "You are my life, and our baby too. It's medicine time!",
         ),
         TeluguQuote(
           id: 5,
-          telugu: "ఒక్క టాబ్లెట్... మన బేబీకి ఒక పెద్ద బహుమతి 🍼",
+          telugu: "Okka tablet... mana baby ki oka pedda gift 🍼",
           english: "Just one tablet... is a big gift for our baby 🍼",
         ),
         TeluguQuote(
           id: 6,
-          telugu: "నా కోసం కాదు, మన బేబీ కోసం వేసుకో చిన్నా 💕",
+          telugu: "Naa kosam kaadu, mana baby kosam vesuko chinna 💕",
           english: "Not for me, take it for our baby chinna 💕",
         ),
         TeluguQuote(
           id: 7,
-          telugu: "ఇప్పుడే వేసుకో, తర్వాత నాకు మెసేజ్ చెయ్యి ❤️",
+          telugu: "Ippude vesuko, tharvatha naaku message cheyyi ❤️",
           english: "Take it right now, and message me after ❤️",
         ),
       ]);
@@ -78,7 +78,7 @@ class QuoteService {
     if (all.isEmpty) {
       return TeluguQuote(
         id: 0,
-        telugu: "నీ ఆరోగ్యమే మన బేబీ ఆరోగ్యం. మందులు వేసుకో బంగారం ❤️",
+        telugu: "Nee arogyame mana baby arogyam. Mandulu vesuko bangaram ❤️",
         english: "Your health is our baby's health. Take your medicines, bangaram ❤️",
       );
     }

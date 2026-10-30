@@ -86,8 +86,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
     if (mounted) {
       FloatingHeartsOverlay.show(
         context,
-        customTitle: '${_storage.herName} బంగారం... ఐ లవ్ యు! ❤️',
-        customMessage: '${widget.medicineName.split('/')[0]} వేసుకున్నావ్ 💕\nచాలా మంచి పని చేసావు!',
+        customTitle: '${_storage.herName} bangaram... I love you! ❤️',
+        customMessage: '${widget.medicineName.split('/')[0]} completed 💕\nChala manchi pani chesav!',
       );
 
       await Future.delayed(const Duration(milliseconds: 2200));
@@ -118,8 +118,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
         SnackBar(
           backgroundColor: AppColors.deepPlum,
           content: Text(
-            '${_storage.snoozeDurationMinutes} నిమిషాల తర్వాత మళ్లీ గుర్తుచేస్తాను బంగారం! ⏳',
-            style: GoogleFonts.notoSansTelugu(color: Colors.white),
+            '${_storage.snoozeDurationMinutes} minutes tharvatha malli gurthuchestha bangaram! ⏳',
+            style: GoogleFonts.poppins(color: Colors.white),
           ),
         ),
       );
@@ -130,7 +130,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final useNature = _storage.photoStyle == 'nature' || _storage.lockScreenPrivacy;
+    final useNature = _storage.photoStyle == 'nature';
 
     return Scaffold(
       body: Stack(
@@ -320,8 +320,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             Text(
                               widget.quoteTelugu,
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.notoSansTelugu(
-                                fontSize: 18,
+                              style: GoogleFonts.poppins(
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
                                 height: 1.5,
                                 color: Colors.white,
@@ -346,7 +346,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             Text(
                               widget.medicineName,
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.notoSansTelugu(
+                              style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.blushPink,
@@ -354,7 +354,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Dose: ${widget.dose} ${widget.doseUnit}',
+                              widget.doseUnit == 'None / Just Reminder' || widget.dose.isEmpty
+                                  ? 'Daily Reminder'
+                                  : 'Dose: ${widget.dose} ${widget.doseUnit}',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 color: Colors.white70,
@@ -365,7 +367,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                               Text(
                                 widget.note,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.notoSansTelugu(
+                                style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   fontStyle: FontStyle.italic,
                                   color: AppColors.softPeach,

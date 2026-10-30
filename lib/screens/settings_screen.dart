@@ -128,7 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Telugu Quotes (${allQuotes.length})',
+                      'Sweet Quotes (${allQuotes.length})',
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -171,7 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 children: [
                                   Text(
                                     q.telugu,
-                                    style: GoogleFonts.notoSansTelugu(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: isDark ? Colors.white : AppColors.deepPlum,
@@ -231,8 +231,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: teluguCtrl,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'Telugu Message',
-                hintText: 'మందులు వేసుకో బంగారం ❤️',
+                labelText: 'Quote in Telugu (English letters)',
+                hintText: 'e.g. Mandulu vesuko bangaram ❤️',
               ),
             ),
             const SizedBox(height: 12),
@@ -241,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               maxLines: 2,
               decoration: const InputDecoration(
                 labelText: 'English Meaning (Optional)',
-                hintText: 'Take your medicine with love ❤️',
+                hintText: 'e.g. Take your medicine with love ❤️',
               ),
             ),
           ],
@@ -443,10 +443,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.medication_rounded, color: AppColors.roseGold, size: 20),
+                        const Icon(Icons.alarm_rounded, color: AppColors.roseGold, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'Medicine Reminders',
+                          'Daily Reminders',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -583,7 +583,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // Option 1: Serene Nature & Flowers
                 InkWell(
-                  onTap: () => _storage.setPhotoStyle('nature'),
+                  onTap: () async {
+                    await _storage.setPhotoStyle('nature');
+                    setState(() {});
+                  },
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -632,7 +635,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // Option 2: Our Couple Photos
                 InkWell(
-                  onTap: () => _storage.setPhotoStyle('couple'),
+                  onTap: () async {
+                    await _storage.setPhotoStyle('couple');
+                    await _storage.setLockScreenPrivacy(false);
+                    setState(() {});
+                  },
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -693,7 +700,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   value: _storage.lockScreenPrivacy,
                   activeColor: AppColors.mintSuccess,
-                  onChanged: (val) => _storage.setLockScreenPrivacy(val),
+                  onChanged: (val) async {
+                    await _storage.setLockScreenPrivacy(val);
+                    setState(() {});
+                  },
                 ),
               ],
             ),

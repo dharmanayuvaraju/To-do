@@ -193,8 +193,9 @@ class NotificationService {
       AppConstants.notificationChannelName,
       channelDescription: AppConstants.notificationChannelDesc,
       importance: Importance.max,
-      priority: Priority.high,
+      priority: Priority.max,
       fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.alarm,
       audioAttributesUsage: AudioAttributesUsage.alarm,
       sound: const RawResourceAndroidNotificationSound('alarm_chime'),
@@ -205,18 +206,18 @@ class NotificationService {
       largeIcon: const DrawableResourceAndroidBitmap('@drawable/ic_notification'),
       styleInformation: BigTextStyleInformation(
         '${quote.telugu}\n\n${medicine.name} (${medicine.dose} ${medicine.doseUnit})\n${medicine.note}',
-        contentTitle: '❤️ మందుల సమయం అయింది బంగారం! / Medicine Time',
+        contentTitle: '❤️ Reminder Time!',
         summaryText: 'Do It Now Care',
       ),
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction(
           AppConstants.actionTaken,
-          'Taken / తీసుకున్నాను ✅',
+          'Taken ✅',
           showsUserInterface: true,
         ),
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
-          'Snooze 10m / 10 నిమిషాలు ఆపు ⏳',
+          'Snooze 10m ⏳',
           showsUserInterface: false,
         ),
       ],
@@ -231,7 +232,7 @@ class NotificationService {
     try {
       await _notificationsPlugin.zonedSchedule(
         notificationId,
-        '❤️ మందుల సమయం అయింది బంగారం!',
+        '❤️ Reminder Time Bangaram! ❤️',
         '${quote.telugu}\n${medicine.name} (${medicine.dose} ${medicine.doseUnit})',
         tzScheduledTime,
         notificationDetails,
@@ -252,15 +253,16 @@ class NotificationService {
 
       final isFinalRepeat = repeat == 6;
       final repeatTitle = isFinalRepeat
-          ? '⚠️ ప్లీజ్ బంగారం... మందులు వేసుకో / Please Take Medicine'
-          : '🔔 రిమైండర్ #${repeat}: మందులు వేసుకున్నావా బంగారం?';
+          ? '⚠️ Please Bangaram... Time for your reminder ❤️'
+          : '🔔 Reminder #$repeat: Reminder time bangaram! ❤️';
 
       final repeatDetails = AndroidNotificationDetails(
         AppConstants.notificationChannelId,
         AppConstants.notificationChannelName,
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         fullScreenIntent: true,
+        visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.alarm,
         audioAttributesUsage: AudioAttributesUsage.alarm,
         sound: const RawResourceAndroidNotificationSound('alarm_chime'),
@@ -269,19 +271,19 @@ class NotificationService {
         vibrationPattern: vibrationPattern,
         color: const Color(0xFFE85A88),
         styleInformation: BigTextStyleInformation(
-          '${repeatQuote.telugu}\n\n${medicine.name} (${medicine.dose} ${medicine.doseUnit})\nఈ డోస్ మిస్ అవ్వద్దు!',
+          '${repeatQuote.telugu}\n\n${medicine.name} (${medicine.dose} ${medicine.doseUnit})\nPlease do not miss this!',
           contentTitle: repeatTitle,
         ),
         actions: <AndroidNotificationAction>[
           const AndroidNotificationAction(
             AppConstants.actionTaken,
-            'Taken / తీసుకున్నాను ✅',
+            'Taken ✅',
             showsUserInterface: true,
           ),
           if (!isFinalRepeat)
             const AndroidNotificationAction(
               AppConstants.actionSnooze,
-              'Snooze 10m / ఆపు ⏳',
+              'Snooze 10m ⏳',
               showsUserInterface: false,
             ),
         ],
@@ -326,8 +328,11 @@ class NotificationService {
       AppConstants.notificationChannelId,
       AppConstants.notificationChannelName,
       importance: Importance.max,
-      priority: Priority.high,
+      priority: Priority.max,
       fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
       sound: const RawResourceAndroidNotificationSound('alarm_chime'),
       playSound: true,
       enableVibration: true,
@@ -335,7 +340,7 @@ class NotificationService {
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction(
           AppConstants.actionTaken,
-          'Taken / తీసుకున్నాను ✅',
+          'Taken ✅',
           showsUserInterface: true,
         ),
       ],
@@ -343,8 +348,8 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       snoozeId,
-      '⏳ స్నూజ్ సమయం ముగిసింది! / Snooze Ended',
-      '${quote.telugu}\n${medicineName} వేసుకునే సమయం అయింది బంగారం!',
+      '⏳ Snooze Ended',
+      '${quote.telugu}\nTime for ${medicineName}!',
       snoozeTarget,
       NotificationDetails(android: androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -377,24 +382,27 @@ class NotificationService {
       AppConstants.notificationChannelId,
       AppConstants.notificationChannelName,
       importance: Importance.max,
-      priority: Priority.high,
+      priority: Priority.max,
       fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
       sound: const RawResourceAndroidNotificationSound('alarm_chime'),
       playSound: true,
       enableVibration: true,
       styleInformation: BigTextStyleInformation(
-        '${quote.telugu}\n\nఇది టెస్ట్ అలారమ్! నోటిఫికేషన్, సౌండ్ మరియు వైబ్రేషన్ సరిగ్గా పనిచేస్తున్నాయి ❤️',
-        contentTitle: '❤️ టెస్ట్ అలారమ్ / Test Loving Reminder',
+        '${quote.telugu}\n\nTest reminder! Notification, sound, and vibration are active ❤️',
+        contentTitle: '❤️ Test Reminder',
       ),
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction(
           AppConstants.actionTaken,
-          'Taken / తీసుకున్నాను ✅',
+          'Taken ✅',
           showsUserInterface: true,
         ),
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
-          'Snooze 10m / ఆపు ⏳',
+          'Snooze 10m ⏳',
           showsUserInterface: false,
         ),
       ],
@@ -402,7 +410,7 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       999999,
-      '❤️ టెస్ట్ అలారమ్ / Test Loving Reminder',
+      '❤️ Test Reminder',
       quote.telugu,
       testTime,
       NotificationDetails(android: androidDetails),
@@ -411,10 +419,10 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: jsonEncode({
         'medicineId': 'test_med',
-        'medicineName': 'Test Medicine (లవ్ టాబ్లెట్)',
+        'medicineName': 'Test Reminder',
         'dose': '1',
-        'doseUnit': 'Dose of Love',
-        'note': 'టెస్ట్ అలారమ్ సరిగ్గా రింగ్ అయింది!',
+        'doseUnit': 'Dose',
+        'note': 'Test alarm ringing on schedule!',
         'quoteTelugu': quote.telugu,
         'quoteEnglish': quote.english,
         'scheduledTime': DateTime.now().toIso8601String(),

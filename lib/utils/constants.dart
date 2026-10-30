@@ -21,10 +21,10 @@ class AppConstants {
   static const String keyLockScreenPrivacy = 'do_it_now_lock_screen_privacy';
 
   // Notification Constants
-  static const String notificationChannelId = 'do_it_now_alarm_channel_v1';
-  static const String notificationChannelName = 'Do It Now Medicine Reminders';
+  static const String notificationChannelId = 'do_it_now_alarm_channel_v2';
+  static const String notificationChannelName = 'Do It Now Reminders';
   static const String notificationChannelDesc =
-      'Loving medical reminders that ring with full alert to keep you and baby healthy.';
+      'Loving reminders that ring with full alert to keep you and baby healthy.';
   
   static const String actionTaken = 'ACTION_TAKEN';
   static const String actionSnooze = 'ACTION_SNOOZE';

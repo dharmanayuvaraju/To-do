@@ -21,18 +21,18 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
   late TextEditingController _doseController;
   late TextEditingController _noteController;
 
-  String _doseUnit = 'Tablet';
+  String _doseUnit = 'None / Reminder';
   List<TimeOfDay> _times = [const TimeOfDay(hour: 9, minute: 0)];
   List<int> _daysOfWeek = [1, 2, 3, 4, 5, 6, 7];
   int _selectedColor = 0xFFF8C8DC;
 
   final List<String> _doseUnits = [
+    'None / Reminder',
+    'Count',
+    'Glass',
+    'Minutes',
     'Tablet',
-    'Capsule',
-    'Spoon (ml)',
-    'Drops',
-    'Injection',
-    'Powder / Sachet',
+    'Other',
   ];
 
   final List<int> _colorPalette = [
@@ -49,11 +49,11 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
     super.initState();
     final m = widget.medicine;
     _nameController = TextEditingController(text: m?.name ?? '');
-    _doseController = TextEditingController(text: m?.dose ?? '1');
+    _doseController = TextEditingController(text: m?.dose ?? '');
     _noteController = TextEditingController(text: m?.note ?? '');
 
     if (m != null) {
-      _doseUnit = m.doseUnit;
+      _doseUnit = _doseUnits.contains(m.doseUnit) ? m.doseUnit : 'None / Reminder';
       _times = List.from(m.times);
       _daysOfWeek = List.from(m.daysOfWeek);
       _selectedColor = m.colorValue;
@@ -104,15 +104,17 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_times.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('కనీసం ఒక సమయం ఎంచుకోండి / Add at least 1 reminder time')),
+        const SnackBar(content: Text('Please add at least 1 reminder time')),
       );
       return;
     }
 
+    final doseText = _doseController.text.trim();
+
     final medicine = Medicine(
       id: widget.medicine?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
-      dose: _doseController.text.trim(),
+      dose: doseText.isEmpty ? '1' : doseText,
       doseUnit: _doseUnit,
       times: _times,
       daysOfWeek: _daysOfWeek.isEmpty ? [1, 2, 3, 4, 5, 6, 7] : _daysOfWeek,
@@ -134,8 +136,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isEdit ? 'మందు సవరించు / Edit Medicine' : 'కొత్త మందు చేర్చు / Add Medicine',
-          style: GoogleFonts.notoSansTelugu(
+          isEdit ? 'Edit Reminder' : 'Add Reminder',
+          style: GoogleFonts.poppins(
             fontSize: 17,
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : AppColors.deepPlum,
@@ -149,8 +151,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Delete Medicine?'),
-                    content: const Text('ఈ మందును తొలగించాలనుకుంటున్నారా?'),
+                    title: const Text('Delete Reminder?'),
+                    content: const Text('Are you sure you want to delete this reminder?'),
                     actions: [
                       TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
                       TextButton(
@@ -179,14 +181,14 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             children: [
-              // Medicine Name
+              // Reminder Name
               GlassContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'మందు పేరు / Medicine Name *',
-                      style: GoogleFonts.notoSansTelugu(
+                      'Reminder Name *',
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -195,17 +197,19 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
+                      style: GoogleFonts.poppins(fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'e.g. Folic Acid / ఫోలిక్ యాసిడ్',
+                        hintText: 'What would you like to be reminded of?',
+                        hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
                         filled: true,
                         fillColor: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(Icons.medication_outlined, color: AppColors.roseGold),
+                        prefixIcon: const Icon(Icons.alarm_rounded, color: AppColors.roseGold),
                       ),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'పేరు రాయండి / Enter name' : null,
+                      validator: (v) => v == null || v.trim().isEmpty ? 'Please enter a reminder name' : null,
                     ),
                   ],
                 ),
@@ -213,14 +217,14 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
 
               const SizedBox(height: 16),
 
-              // Dose & Dose Unit
+              // Quantity / Dose & Unit (Optional)
               GlassContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'డోస్ & పరిమాణం / Dose & Unit',
-                      style: GoogleFonts.notoSansTelugu(
+                      'Quantity or Count (Optional)',
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -229,12 +233,13 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        // Dose input
+                        // Quantity input
                         Expanded(
                           flex: 2,
                           child: TextFormField(
                             controller: _doseController,
                             keyboardType: TextInputType.text,
+                            style: GoogleFonts.poppins(fontSize: 13),
                             decoration: InputDecoration(
                               hintText: '1',
                               filled: true,
@@ -247,7 +252,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Dose Unit Dropdown
+                        // Unit Dropdown
                         Expanded(
                           flex: 3,
                           child: Container(
@@ -264,7 +269,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                                 items: _doseUnits.map((u) {
                                   return DropdownMenuItem(
                                     value: u,
-                                    child: Text(u, style: GoogleFonts.poppins(fontSize: 13)),
+                                    child: Text(u, style: GoogleFonts.poppins(fontSize: 12)),
                                   );
                                 }).toList(),
                                 onChanged: (val) {
@@ -291,8 +296,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'రిమైండర్ సమయాలు / Reminder Times',
-                          style: GoogleFonts.notoSansTelugu(
+                          'Reminder Times',
+                          style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -301,7 +306,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                         TextButton.icon(
                           onPressed: () => _pickTime(),
                           icon: const Icon(Icons.add, size: 18),
-                          label: const Text('సమయం చేర్చు'),
+                          label: Text('+ Add Time', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -345,8 +350,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ఏ రోజుల్లో వేసుకోవాలి? / Days of Week',
-                      style: GoogleFonts.notoSansTelugu(
+                      'Repeat Days',
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -416,8 +421,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ప్రేమతో చిన్న నోట్ / Loving Note',
-                      style: GoogleFonts.notoSansTelugu(
+                      'Sweet Loving Note (Optional)',
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -427,8 +432,10 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                     TextFormField(
                       controller: _noteController,
                       maxLines: 2,
+                      style: GoogleFonts.poppins(fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: 'e.g. భోజనం తర్వాత వేసుకో బంగారం, నీళ్లు ఎక్కువగా తాగు ❤️',
+                        hintText: 'Write a sweet note for this reminder...',
+                        hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                         filled: true,
                         fillColor: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
                         border: OutlineInputBorder(
@@ -444,14 +451,14 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
 
               const SizedBox(height: 16),
 
-              // Pastel Color Theme
+              // Theme Color
               GlassContainer(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'కార్డ్ రంగు / Card Pastel Color',
-                      style: GoogleFonts.notoSansTelugu(
+                      'Card Theme Color',
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.blushPink : AppColors.deepPlum,
@@ -507,8 +514,8 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                   elevation: 4,
                 ),
                 child: Text(
-                  isEdit ? 'మార్పులను భద్రపరుచు / Save Changes' : 'మందును భద్రపరుచు / Save Medicine ❤️',
-                  style: GoogleFonts.notoSansTelugu(
+                  isEdit ? 'Save Changes' : 'Save Reminder ❤️',
+                  style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.nightIndigo : AppColors.deepPlum,
@@ -524,4 +531,3 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
     );
   }
 }
-
