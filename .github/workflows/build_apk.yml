@@ -28,14 +28,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Ensure Gradle Wrapper exists
-        run: |
-          cd android
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper --gradle-version 8.3
-          fi
-          chmod +x gradlew
-
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
