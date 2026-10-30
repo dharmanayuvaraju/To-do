@@ -4,6 +4,7 @@ import 'services/storage_service.dart';
 import 'services/notification_service.dart';
 import 'services/quote_service.dart';
 import 'utils/app_theme.dart';
+import 'utils/constants.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {

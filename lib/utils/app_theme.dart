@@ -42,7 +42,7 @@ class AppTheme {
           color: const Color(0xFF6B5F79),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white.withOpacity(0.85),
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -97,7 +97,7 @@ class AppTheme {
           color: const Color(0xFFB5A7C6),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.nightPlum.withOpacity(0.7),
         elevation: 0,
         shape: RoundedRectangleBorder(
