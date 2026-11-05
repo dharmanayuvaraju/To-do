@@ -540,6 +540,29 @@ class NotificationService {
     await _notificationsPlugin.cancel((baseId + 999).abs() % 100000000);
   }
 
+  /// Cancel remaining cascade nag reminders for today's dose
+  Future<void> cancelTodayCascades(String medicineId, DateTime scheduledTime) async {
+    for (int repeat = 1; repeat <= 6; repeat++) {
+      final repeatOffset = repeat * 10;
+      final weekdayId = getNotificationId(
+        medicineId,
+        scheduledTime.weekday,
+        scheduledTime.hour,
+        scheduledTime.minute,
+        repeatOffset,
+      );
+      final everydayId = getNotificationId(
+        medicineId,
+        0,
+        scheduledTime.hour,
+        scheduledTime.minute,
+        repeatOffset,
+      );
+      await _notificationsPlugin.cancel(weekdayId);
+      await _notificationsPlugin.cancel(everydayId);
+    }
+  }
+
   /// Cancel all scheduled notifications across entire app
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();

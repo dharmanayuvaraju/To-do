@@ -192,26 +192,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
     );
 
     // Cancel today's nag cascade reminders so they don't collide with snooze
-    final notifPlugin = FlutterLocalNotificationsPlugin();
-    for (int repeat = 1; repeat <= 6; repeat++) {
-      final repeatOffset = repeat * 10;
-      final weekdayId = NotificationService.getNotificationId(
-        widget.medicineId,
-        todaySlot.weekday,
-        todaySlot.hour,
-        todaySlot.minute,
-        repeatOffset,
-      );
-      final everydayId = NotificationService.getNotificationId(
-        widget.medicineId,
-        0,
-        todaySlot.hour,
-        todaySlot.minute,
-        repeatOffset,
-      );
-      await notifPlugin.cancel(weekdayId);
-      await notifPlugin.cancel(everydayId);
-    }
+    await NotificationService().cancelTodayCascades(widget.medicineId, todaySlot);
 
     await NotificationService().scheduleSnoozeNotification(
       medicineId: widget.medicineId,
