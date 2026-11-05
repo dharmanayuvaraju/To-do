@@ -74,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _storage.reloadFromDisk();
+      if (mounted) setState(() {});
       _checkPermissions();
       AlarmService().syncAndRescheduleAll();
     }

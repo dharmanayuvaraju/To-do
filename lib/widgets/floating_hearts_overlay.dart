@@ -183,7 +183,7 @@ class _CelebrationWidgetState extends State<_CelebrationWidget>
 
                     // Loving Title
                     Text(
-                      widget.customTitle ?? 'Thank you, Bujji! ❤️',
+                      widget.customTitle ?? 'Thank you, Papa! ❤️',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 20,

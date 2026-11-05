@@ -13,35 +13,53 @@ import 'quote_service.dart';
 
 // Top-level background notification response handler
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse notificationResponse) {
-  debugPrint('Notification background tap action: ${notificationResponse.actionId}');
-  _handleNotificationAction(notificationResponse);
+void notificationTapBackground(NotificationResponse notificationResponse) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+  await _handleNotificationAction(notificationResponse);
 }
 
-void _handleNotificationAction(NotificationResponse response) async {
+Future<void> _handleNotificationAction(NotificationResponse response) async {
   final payload = response.payload;
   if (payload == null || payload.isEmpty) return;
 
   try {
     final Map<String, dynamic> data = jsonDecode(payload);
     final String medicineId = data['medicineId'] ?? '';
-    final String medicineName = data['medicineName'] ?? '';
+    final String medicineName = data['medicineName'] ?? 'Tablet';
     final String scheduledIso = data['scheduledTime'] ?? '';
-    final DateTime scheduledTime = scheduledIso.isNotEmpty
-        ? DateTime.parse(scheduledIso)
+    final DateTime rawScheduled = scheduledIso.isNotEmpty
+        ? (DateTime.tryParse(scheduledIso) ?? DateTime.now())
         : DateTime.now();
+
+    final now = DateTime.now();
+    // Normalize to TODAY's date at the scheduled hour & minute
+    final DateTime scheduledTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      rawScheduled.hour,
+      rawScheduled.minute,
+    );
 
     final storage = StorageService();
     await storage.init();
+    final notifPlugin = FlutterLocalNotificationsPlugin();
 
     if (response.actionId == AppConstants.actionTaken) {
+      // 1. Mark as taken in storage
       await storage.markAsTaken(
         medicineId: medicineId,
         medicineName: medicineName,
         scheduledTime: scheduledTime,
       );
-      // Cancel remaining repeat cascade notifications for this dose today
-      final notifPlugin = FlutterLocalNotificationsPlugin();
+
+      // 2. Dismiss the notification that was tapped
+      if (response.id != null) {
+        await notifPlugin.cancel(response.id!);
+      }
+
+      // 3. Cancel remaining repeat cascade notifications for this dose today
       for (int repeat = 1; repeat <= 6; repeat++) {
         final repeatOffset = repeat * 10;
         final weekdayId = NotificationService.getNotificationId(
@@ -61,19 +79,87 @@ void _handleNotificationAction(NotificationResponse response) async {
         await notifPlugin.cancel(weekdayId);
         await notifPlugin.cancel(everydayId);
       }
+
+      // Cancel any pending snooze notification
+      final snoozeId = (medicineId.hashCode + 999).abs() % 100000000;
+      await notifPlugin.cancel(snoozeId);
+
+      // 4. Show lightweight success confirmation so she knows it was recorded
+      await notifPlugin.show(
+        (medicineId.hashCode + 888).abs() % 100000000,
+        'Good girl Papa! ❤️ Marked as Taken ✅',
+        '$medicineName vesukunnav, very good! Premato mee Babu ❤️',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'do_it_now_status_channel',
+            'Do It Now Status',
+            channelDescription: 'Confirmation alerts for taken medicines',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            autoCancel: true,
+            timeoutAfter: 8000,
+          ),
+        ),
+      );
     } else if (response.actionId == AppConstants.actionSnooze) {
+      // 1. Mark as snoozed in storage
       await storage.markAsSnoozed(
         medicineId: medicineId,
         medicineName: medicineName,
         scheduledTime: scheduledTime,
       );
-      // Schedule immediate snooze for 10 minutes later
+
+      // 2. Dismiss the current ringing notification
+      if (response.id != null) {
+        await notifPlugin.cancel(response.id!);
+      }
+
+      // 3. Cancel today's remaining cascade nag alarms so they don't ring at the same time as snooze
+      for (int repeat = 1; repeat <= 6; repeat++) {
+        final repeatOffset = repeat * 10;
+        final weekdayId = NotificationService.getNotificationId(
+          medicineId,
+          scheduledTime.weekday,
+          scheduledTime.hour,
+          scheduledTime.minute,
+          repeatOffset,
+        );
+        final everydayId = NotificationService.getNotificationId(
+          medicineId,
+          0,
+          scheduledTime.hour,
+          scheduledTime.minute,
+          repeatOffset,
+        );
+        await notifPlugin.cancel(weekdayId);
+        await notifPlugin.cancel(everydayId);
+      }
+
+      // 4. Schedule the snooze alarm 10 minutes from now
       final notifService = NotificationService();
       await notifService.scheduleSnoozeNotification(
         medicineId: medicineId,
         medicineName: medicineName,
         scheduledTime: scheduledTime,
         snoozeMinutes: storage.snoozeDurationMinutes,
+      );
+
+      // 5. Immediately show the playful heads-up alert: "😠❤️ musukoni mundu vesuko!"
+      await notifPlugin.show(
+        (medicineId.hashCode + 777).abs() % 100000000,
+        '😠❤️ musukoni mundu vesuko!',
+        'Chalu inka snooze chesindi! ${storage.snoozeDurationMinutes}m lo malli ring avthundi. Ippude vesuko bangaram ❤️',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'do_it_now_status_channel',
+            'Do It Now Status',
+            channelDescription: 'Snooze alerts',
+            importance: Importance.high,
+            priority: Priority.high,
+            autoCancel: true,
+            timeoutAfter: 15000,
+          ),
+        ),
       );
     }
   } catch (e) {
@@ -126,13 +212,18 @@ class NotificationService {
 
     await _notificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        _handleNotificationAction(response);
-        if (response.payload != null && response.payload!.isNotEmpty) {
-          try {
-            final data = jsonDecode(response.payload!);
-            onNotificationOpened?.call(data);
-          } catch (_) {}
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        if (response.actionId != null && response.actionId!.isNotEmpty) {
+          // Action button tapped (Taken or Snooze) -> process in background without opening app
+          await _handleNotificationAction(response);
+        } else {
+          // Notification body tapped -> open AlarmScreen
+          if (response.payload != null && response.payload!.isNotEmpty) {
+            try {
+              final data = jsonDecode(response.payload!);
+              onNotificationOpened?.call(data);
+            } catch (_) {}
+          }
         }
       },
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
@@ -330,12 +421,14 @@ class NotificationService {
         const AndroidNotificationAction(
           AppConstants.actionTaken,
           'Taken ✅',
-          showsUserInterface: true,
+          showsUserInterface: false,
+          cancelNotification: true,
         ),
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
           'Snooze 10m ⏳',
           showsUserInterface: false,
+          cancelNotification: true,
         ),
       ],
     );
@@ -419,7 +512,8 @@ class NotificationService {
         const AndroidNotificationAction(
           AppConstants.actionTaken,
           'Taken ✅',
-          showsUserInterface: true,
+          showsUserInterface: false,
+          cancelNotification: true,
         ),
       ],
     );
@@ -476,12 +570,14 @@ class NotificationService {
         const AndroidNotificationAction(
           AppConstants.actionTaken,
           'Taken ✅',
-          showsUserInterface: true,
+          showsUserInterface: false,
+          cancelNotification: true,
         ),
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
           'Snooze 10m ⏳',
           showsUserInterface: false,
+          cancelNotification: true,
         ),
       ],
     );

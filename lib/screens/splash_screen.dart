@@ -55,8 +55,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final storage = StorageService();
-    final herName = storage.isInitialized ? storage.herName : 'Bujji';
-    final myName = storage.isInitialized ? storage.myName : 'Chinnu';
+    final herName = storage.isInitialized ? storage.herName : 'Papa';
+    final myName = storage.isInitialized ? storage.myName : 'Babu';
 
     return Scaffold(
       body: Container(

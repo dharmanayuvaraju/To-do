@@ -2,7 +2,7 @@ class AppConstants {
   static const String appName = 'Do It Now';
 
   // Default romantic placeholders
-  static const String defaultHerName = 'Bujji';
+  static const String defaultHerName = 'Papa';
   static const String defaultMyName = 'Babu';
 
   // Storage Keys
@@ -31,7 +31,7 @@ class AppConstants {
 
   // Default handwritten love note
   static const String defaultLoveNote =
-      "My Dearest Bujji ❤️\n\n"
+      "My Dearest Papa ❤️\n\n"
       "You are my whole world, and our baby is our sweetest dream.\n"
       "Taking your tablet on time every morning gives me so much peace of mind.\n"
       "Please never skip your medicine. Your health and smile mean everything to me.\n\n"

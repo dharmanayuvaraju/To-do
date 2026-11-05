@@ -44,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: herCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Her Name',
-                  hintText: 'e.g. Bujji',
+                  hintText: 'e.g. Papa',
                 ),
               ),
               const SizedBox(height: 12),

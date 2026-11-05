@@ -59,17 +59,10 @@ class MedicineCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: const Icon(
-                    Icons.medication_rounded,
+                    Icons.alarm_on_rounded,
                     color: AppColors.crimsonLove,
                     size: 24,
-                  )
-                      .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                      .moveY(
-                        begin: 0,
-                        end: -4,
-                        duration: 1.2.seconds,
-                        curve: Curves.easeInOut,
-                      ),
+                  ),
                 ),
               ),
 
@@ -243,13 +236,7 @@ class MedicineCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.favorite_rounded, color: Colors.white, size: 20)
-                              .animate(onPlay: (c) => c.repeat(reverse: true))
-                              .scale(
-                                begin: const Offset(1, 1),
-                                end: const Offset(1.25, 1.25),
-                                duration: 800.ms,
-                              ),
+                          const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
                           const SizedBox(width: 8),
                           Text(
                             'Taken ❤️',

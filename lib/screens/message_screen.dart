@@ -178,7 +178,7 @@ class _MessageScreenState extends State<MessageScreen> {
                                   .scale(begin: const Offset(1, 1), end: const Offset(1.3, 1.3), duration: 1.seconds),
                               const SizedBox(width: 8),
                               Text(
-                                'To My Dearest Bujji ❤️',
+                                'To My Dearest Papa ❤️',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,

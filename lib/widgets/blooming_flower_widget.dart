@@ -80,14 +80,7 @@ class BloomingFlowerWidget extends StatelessWidget {
                 ),
               ],
             ),
-          )
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scale(
-                begin: const Offset(1, 1),
-                end: Offset(stage == 4 ? 1.08 : 1.03, stage == 4 ? 1.08 : 1.03),
-                duration: 2.seconds,
-                curve: Curves.easeInOut,
-              ),
+          ),
 
           const SizedBox(width: 14),
 

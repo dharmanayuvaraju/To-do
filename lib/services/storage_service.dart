@@ -52,9 +52,23 @@ class StorageService extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
 
     _herName = _prefs.getString(AppConstants.keyHerName) ?? AppConstants.defaultHerName;
+    if (_herName.toLowerCase() == 'bujji' || _herName.isEmpty) {
+      _herName = 'Papa';
+      _prefs.setString(AppConstants.keyHerName, 'Papa');
+    }
+
     _myName = _prefs.getString(AppConstants.keyMyName) ?? AppConstants.defaultMyName;
+    if (_myName.isEmpty || _myName.toLowerCase() == 'chinnu') {
+      _myName = 'Babu';
+      _prefs.setString(AppConstants.keyMyName, 'Babu');
+    }
+
     _babuPhone = _prefs.getString(AppConstants.keyBabuPhone) ?? '';
     _loveNote = _prefs.getString(AppConstants.keyLoveNote) ?? AppConstants.defaultLoveNote;
+    if (_loveNote.contains('Bujji')) {
+      _loveNote = _loveNote.replaceAll('Bujji', 'Papa');
+      _prefs.setString(AppConstants.keyLoveNote, _loveNote);
+    }
     _snoozeDurationMinutes = _prefs.getInt(AppConstants.keySnoozeDuration) ?? 10;
     _isSoundEnabled = _prefs.getBool(AppConstants.keySoundEnabled) ?? true;
     _isVibrationEnabled = _prefs.getBool(AppConstants.keyVibrationEnabled) ?? true;
@@ -62,7 +76,16 @@ class StorageService extends ChangeNotifier {
     _photoStyle = _prefs.getString(AppConstants.keyPhotoStyle) ?? 'couple';
     _lockScreenPrivacy = _prefs.getBool(AppConstants.keyLockScreenPrivacy) ?? false;
 
-    // Load Medicines
+    // Load Data
+    _loadMedicinesFromPrefs();
+    _loadLogsFromPrefs();
+    _loadQuotesFromPrefs();
+
+    _isInitialized = true;
+    notifyListeners();
+  }
+
+  void _loadMedicinesFromPrefs() {
     final medJson = _prefs.getString(AppConstants.keyMedicines);
     if (medJson != null && medJson.isNotEmpty) {
       try {
@@ -87,8 +110,9 @@ class StorageService extends ChangeNotifier {
       // Pre-seed ONLY ONE default medicine as requested: Everyday at 9:20 AM
       _seedDefaultMedicines();
     }
+  }
 
-    // Load Logs
+  void _loadLogsFromPrefs() {
     final logsJson = _prefs.getString(AppConstants.keyLogs);
     if (logsJson != null && logsJson.isNotEmpty) {
       try {
@@ -98,8 +122,9 @@ class StorageService extends ChangeNotifier {
         debugPrint('Error loading logs: $e');
       }
     }
+  }
 
-    // Load Custom Quotes
+  void _loadQuotesFromPrefs() {
     final quotesJson = _prefs.getString(AppConstants.keyQuotes);
     if (quotesJson != null && quotesJson.isNotEmpty) {
       try {
@@ -109,9 +134,23 @@ class StorageService extends ChangeNotifier {
         debugPrint('Error loading custom quotes: $e');
       }
     }
+  }
 
-    _isInitialized = true;
-    notifyListeners();
+  /// Reload all state from disk (crucial when background notification actions update storage)
+  Future<void> reloadFromDisk() async {
+    if (!_isInitialized) {
+      await init();
+      return;
+    }
+    try {
+      await _prefs.reload();
+      _loadMedicinesFromPrefs();
+      _loadLogsFromPrefs();
+      _loadQuotesFromPrefs();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error reloading storage from disk: $e');
+    }
   }
 
   void _seedDefaultMedicines() {

@@ -128,13 +128,7 @@ class DialClockWidget extends StatelessWidget {
                                 ? AppColors.pastelYellow
                                 : const Color(0xFFFFB03B),
                             size: 26,
-                          )
-                              .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                              .scale(
-                                begin: const Offset(1, 1),
-                                end: const Offset(1.15, 1.15),
-                                duration: 2.seconds,
-                              ),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             isNight ? 'Night' : 'Day',
@@ -193,13 +187,7 @@ class DialClockWidget extends StatelessWidget {
                           Icons.favorite_rounded,
                           color: AppColors.roseGold,
                           size: 32,
-                        )
-                            .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                            .scale(
-                              begin: const Offset(1, 1),
-                              end: const Offset(1.2, 1.2),
-                              duration: 1.5.seconds,
-                            ),
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           'All Taken Today!',
