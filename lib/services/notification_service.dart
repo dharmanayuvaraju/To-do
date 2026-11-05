@@ -148,7 +148,7 @@ Future<void> _handleNotificationAction(NotificationResponse response) async {
       await notifPlugin.show(
         (medicineId.hashCode + 777).abs() % 100000000,
         '😠❤️ musukoni mundu vesuko!',
-        'Chalu inka snooze chesindi! ${storage.snoozeDurationMinutes}m lo malli ring avthundi. Ippude vesuko bangaram ❤️',
+        'mundu medicine vesuko tharuvtha work chesko! Chalu inka snooze chesindi bangaram ❤️',
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'do_it_now_status_channel',
@@ -177,8 +177,11 @@ class NotificationService {
 
   bool _isInitialized = false;
 
-  // Callback when user taps notification or action to open UI
+  // Callback when user taps notification body to open UI
   Function(Map<String, dynamic>)? onNotificationOpened;
+
+  // Callback when user taps snooze action button on notification to open the required popup
+  Function(Map<String, dynamic>)? onSnoozeOpened;
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -213,9 +216,17 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        if (response.actionId != null && response.actionId!.isNotEmpty) {
-          // Action button tapped (Taken or Snooze) -> process in background without opening app
+        if (response.actionId == AppConstants.actionTaken) {
+          // Action Taken: handle silently in background without redirecting to app!
           await _handleNotificationAction(response);
+        } else if (response.actionId == AppConstants.actionSnooze) {
+          // Action Snooze: opens the app to show "mundu medicine vesuko tharuvtha work chesko!" popup
+          if (response.payload != null && response.payload!.isNotEmpty) {
+            try {
+              final data = jsonDecode(response.payload!);
+              onSnoozeOpened?.call(data);
+            } catch (_) {}
+          }
         } else {
           // Notification body tapped -> open AlarmScreen
           if (response.payload != null && response.payload!.isNotEmpty) {
@@ -427,7 +438,7 @@ class NotificationService {
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
           'Snooze 10m ⏳',
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: true,
         ),
       ],
@@ -521,7 +532,7 @@ class NotificationService {
     await _notificationsPlugin.zonedSchedule(
       snoozeId,
       '😠❤️ musukoni mundu vesuko!',
-      'Chalu inka snooze chesindi! Ippude $medicineName vesuko bangaram ❤️',
+      'mundu medicine vesuko tharuvtha work chesko! Ippude $medicineName vesuko bangaram ❤️',
       snoozeTarget,
       NotificationDetails(android: androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -599,7 +610,7 @@ class NotificationService {
         const AndroidNotificationAction(
           AppConstants.actionSnooze,
           'Snooze 10m ⏳',
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: true,
         ),
       ],

@@ -10,8 +10,6 @@ import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/battery_optimizer_helper.dart';
-import '../widgets/dial_clock_widget.dart';
-import '../widgets/blooming_flower_widget.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/floating_hearts_overlay.dart';
@@ -66,6 +64,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   : DateTime.now(),
             ),
           ),
+        );
+      }
+    };
+
+    // Listen for notification Snooze tap to show the required popup immediately
+    NotificationService().onSnoozeOpened = (data) {
+      if (mounted) {
+        _showSnoozeAlertPopup(
+          medicineId: data['medicineId'] ?? '',
+          medicineName: data['medicineName'] ?? 'Medicine',
+          scheduledTime: data['scheduledTime'] != null
+              ? DateTime.tryParse(data['scheduledTime']) ?? DateTime.now()
+              : DateTime.now(),
         );
       }
     };
@@ -245,63 +256,85 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           // Random Telugu Quote Card with photo preview & refresh
           _buildQuoteCard(isDark),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Big Glowing Moon-and-Sun Dial
-          DialClockWidget(
-            nextMedicine: nextSlot?.medicine,
-            nextTime: nextSlot?.time,
-            onTap: () {
-              if (nextSlot != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AlarmScreen(
-                      medicineId: nextSlot!.medicine.id,
-                      medicineName: nextSlot.medicine.name,
-                      dose: nextSlot.medicine.dose,
-                      doseUnit: nextSlot.medicine.doseUnit,
-                      note: nextSlot.medicine.note,
-                      quoteTelugu: _currentQuote.telugu,
-                      scheduledTime: nextSlot.scheduledDateTime,
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
+          // Senior Product UI: Sleek Daily Progress Hero Capsule
+          _buildDailyHeroCapsule(isDark, todaySlots, nextSlot, streak),
 
           const SizedBox(height: 20),
 
-          // Blooming Flower Streak Widget
-          BloomingFlowerWidget(streakDays: streak),
-
-          const SizedBox(height: 24),
-
-          // Today's Medicines Header
+          // Today's Reminders Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Today\'s Medicines',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.deepPlum,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Today\'s Schedule',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppColors.deepPlum,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white10 : const Color(0xFFF3E8FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${todaySlots.where((s) => s.log?.isTaken ?? false).length}/${todaySlots.length} Done',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.blushPink : AppColors.deepPlum,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.lavender.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  '${todaySlots.where((s) => s.log?.isTaken ?? false).length}/${todaySlots.length} Taken',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.deepPlum,
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AddEditMedicineScreen(),
+                    ),
+                  );
+                  if (result == true) {
+                    await AlarmService().syncAndRescheduleAll();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.heartButtonGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF5277).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Add',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -384,6 +417,212 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
 
           const SizedBox(height: 80), // bottom padding for fab
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDailyHeroCapsule(bool isDark, List<_ScheduledSlot> todaySlots, _ScheduledSlot? nextSlot, int streak) {
+    final takenCount = todaySlots.where((s) => s.log?.isTaken ?? false).length;
+    final totalCount = todaySlots.length;
+    final double percent = totalCount == 0 ? 1.0 : (takenCount / totalCount).clamp(0.0, 1.0);
+    final bool allDone = totalCount > 0 && takenCount == totalCount;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1728).withOpacity(0.92) : Colors.white.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3B2A4D) : const Color(0xFFF0E5DE),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.3) : const Color(0xFFE8D7D0).withOpacity(0.4),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Sleek Circular Progress Ring
+              SizedBox(
+                width: 76,
+                height: 76,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: percent,
+                      strokeWidth: 7,
+                      backgroundColor: isDark ? Colors.white10 : const Color(0xFFF3E8FF),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        allDone ? const Color(0xFF10B981) : const Color(0xFFFF5277),
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$takenCount/$totalCount',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.deepPlum,
+                          ),
+                        ),
+                        Text(
+                          '${(percent * 100).toInt()}%',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: allDone ? const Color(0xFF10B981) : const Color(0xFFFF5277),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 18),
+
+              // Right Info: Next reminder & streak
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          allDone ? 'ALL COMPLETED! 🎉' : 'NEXT REMINDER',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                            color: allDone ? const Color(0xFF10B981) : const Color(0xFFFF5277),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3B0).withOpacity(isDark ? 0.2 : 0.6),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('🔥', style: TextStyle(fontSize: 11)),
+                              const SizedBox(width: 3),
+                              Text(
+                                '$streak Days',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? const Color(0xFFFFF3B0) : const Color(0xFF8C5800),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    if (nextSlot != null) ...[
+                      Text(
+                        AppDateUtils.formatTimeOfDay(nextSlot.time),
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.deepPlum,
+                        ),
+                      ),
+                      Text(
+                        nextSlot.medicine.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? AppColors.lavender : const Color(0xFF6B5F79),
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        'Rest well Papa 💕',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.deepPlum,
+                        ),
+                      ),
+                      Text(
+                        'All medicines taken today. Babu loves you!',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: isDark ? AppColors.lavender : const Color(0xFF6B5F79),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          if (nextSlot != null) ...[
+            const SizedBox(height: 14),
+            InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AlarmScreen(
+                      medicineId: nextSlot.medicine.id,
+                      medicineName: nextSlot.medicine.name,
+                      dose: nextSlot.medicine.dose,
+                      doseUnit: nextSlot.medicine.doseUnit,
+                      note: nextSlot.medicine.note,
+                      quoteTelugu: _currentQuote.telugu,
+                      scheduledTime: nextSlot.scheduledDateTime,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF9F5F3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.touch_app_rounded, size: 14, color: Color(0xFFFF5277)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tap to preview lock-screen alert',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : AppColors.deepPlum,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -812,6 +1051,144 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showSnoozeAlertPopup({
+    required String medicineId,
+    required String medicineName,
+    required DateTime scheduledTime,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFF1E1728),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('😠', style: TextStyle(fontSize: 26)),
+            const SizedBox(width: 8),
+            Text(
+              'musukoni mundu vesuko!',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: const Color(0xFFFF7E9E),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('❤️', style: TextStyle(fontSize: 22)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'mundu medicine vesuko tharuvtha work chesko!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Chalu inka snooze chesindi bangaram! Ippude $medicineName vesukunte Babu chala happy ga feel avthadu ❤️',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.85),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final now = DateTime.now();
+              final todaySlot = DateTime(
+                now.year,
+                now.month,
+                now.day,
+                scheduledTime.hour,
+                scheduledTime.minute,
+              );
+              await _storage.markAsSnoozed(
+                medicineId: medicineId,
+                medicineName: medicineName,
+                scheduledTime: todaySlot,
+              );
+              await NotificationService().cancelTodayCascades(medicineId, todaySlot);
+              await NotificationService().scheduleSnoozeNotification(
+                medicineId: medicineId,
+                medicineName: medicineName,
+                scheduledTime: todaySlot,
+                snoozeMinutes: _storage.snoozeDurationMinutes,
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: const Color(0xFF2A1D36),
+                    content: Text(
+                      'musukoni mundu vesuko! (${_storage.snoozeDurationMinutes}m tharvatha malli alert avthundi ⏳)',
+                      style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Text(
+              'Snooze ${_storage.snoozeDurationMinutes}m ⏳',
+              style: GoogleFonts.poppins(color: Colors.white60, fontSize: 12),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF5277),
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final now = DateTime.now();
+              final todaySlot = DateTime(
+                now.year,
+                now.month,
+                now.day,
+                scheduledTime.hour,
+                scheduledTime.minute,
+              );
+              await _storage.markAsTaken(
+                medicineId: medicineId,
+                medicineName: medicineName,
+                scheduledTime: todaySlot,
+              );
+              await NotificationService().cancelMedicineReminders(medicineId);
+              await AlarmService().syncAndRescheduleAll();
+              if (mounted) {
+                FloatingHeartsOverlay.show(
+                  context,
+                  customTitle: 'Very good Papa! ❤️',
+                  customMessage: '$medicineName vesukunnav 💕\nLove from Babu!',
+                );
+              }
+            },
+            child: Text(
+              'Ippude Vesukunta! ❤️',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
+        ],
       ),
     );
   }

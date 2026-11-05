@@ -127,14 +127,30 @@ class _AlarmScreenState extends State<AlarmScreen> {
             const Text('❤️', style: TextStyle(fontSize: 22)),
           ],
         ),
-        content: Text(
-          'Snooze cheyoddu bangaram! Ippude vesuko please... Sare ${_storage.snoozeDurationMinutes}m tharvatha malli ring chestha!',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: Colors.white.withOpacity(0.9),
-            height: 1.4,
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'mundu medicine vesuko tharuvtha work chesko!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Snooze cheyoddu bangaram! Ippude vesuko please... Sare ${_storage.snoozeDurationMinutes}m tharvatha malli ring chestha!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.85),
+                height: 1.4,
+              ),
+            ),
+          ],
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
