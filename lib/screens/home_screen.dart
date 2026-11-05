@@ -27,16 +27,25 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final StorageService _storage = StorageService();
   late TeluguQuote _currentQuote;
   int _currentIndex = 0;
 
+  bool _hasCheckedPermissions = false;
+  bool _isNotificationGranted = true;
+  bool _isExactAlarmGranted = true;
+  bool _isBatteryIgnored = true;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentQuote = QuoteService().getRandomQuote();
     _storage.addListener(_onStorageChange);
+
+    // Initial check of permissions and schedule refresh
+    _checkPermissions();
 
     // Listen for notification opens to show AlarmScreen if needed
     NotificationService().onNotificationOpened = (data) {
@@ -62,7 +71,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+      AlarmService().syncAndRescheduleAll();
+    }
+  }
+
+  Future<void> _checkPermissions() async {
+    final notif = await BatteryOptimizerHelper.isNotificationGranted();
+    final alarm = await BatteryOptimizerHelper.isExactAlarmGranted();
+    final battery = await BatteryOptimizerHelper.isIgnoringBatteryOptimizations();
+    if (mounted) {
+      setState(() {
+        _isNotificationGranted = notif;
+        _isExactAlarmGranted = alarm;
+        _isBatteryIgnored = battery;
+        _hasCheckedPermissions = true;
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _storage.removeListener(_onStorageChange);
     super.dispose();
   }
@@ -202,7 +234,10 @@ class _HomeScreenState extends State<HomeScreen> {
           // Header with circular avatar of [MY NAME]
           _buildHeader(isDark),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          // Setup Banner if any permission or battery optimization needs fixing
+          _buildSetupBanner(isDark),
 
           // Random Telugu Quote Card with photo preview & refresh
           _buildQuoteCard(isDark),
@@ -533,6 +568,247 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _refreshQuote,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSetupBanner(bool isDark) {
+    final allGood = _isNotificationGranted && _isExactAlarmGranted && _isBatteryIgnored;
+    if (allGood && _hasCheckedPermissions) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF33202C) : const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? AppColors.blushPink.withOpacity(0.5) : const Color(0xFFFFC107),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Text('⚡', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Alarm Setup Needed',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF856404),
+                  ),
+                ),
+                Text(
+                  'Fix permissions so daily reminders ring on time without fail.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: isDark ? Colors.white70 : const Color(0xFF856404),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.blushPink,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 2,
+            ),
+            onPressed: () => _showSetupDialog(context),
+            child: Text(
+              'Fix ⚙️',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.deepPlum,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow({
+    required String title,
+    required bool isGranted,
+    required VoidCallback onFix,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ),
+        if (isGranted)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.mintSuccess.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text('Allowed ✅', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.mintSuccess)),
+          )
+        else
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              backgroundColor: AppColors.blushPink.withOpacity(0.4),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: onFix,
+            child: const Text('Enable ⚠️', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.deepPlum)),
+          ),
+      ],
+    );
+  }
+
+  void _showSetupDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: isDark ? AppColors.nightIndigo : AppColors.cream,
+            title: Row(
+              children: [
+                const Text('⚙️', style: TextStyle(fontSize: 22)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Daily Alarm Setup Guide',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: isDark ? Colors.white : AppColors.deepPlum,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  Text(
+                    'To ensure daily alarms ring without fail on her phone even in deep sleep or after restart, please check these 3 items:',
+                    style: GoogleFonts.poppins(fontSize: 11, height: 1.4),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // 1. Notification Permission Status
+                  _buildStatusRow(
+                    title: '1. Notifications',
+                    isGranted: _isNotificationGranted,
+                    onFix: () async {
+                      await BatteryOptimizerHelper.requestNotificationPermissions();
+                      await _checkPermissions();
+                      setDialogState(() {});
+                    },
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // 2. Exact Alarm Permission Status
+                  _buildStatusRow(
+                    title: '2. Exact Alarms',
+                    isGranted: _isExactAlarmGranted,
+                    onFix: () async {
+                      await BatteryOptimizerHelper.requestExactAlarmPermission();
+                      await _checkPermissions();
+                      setDialogState(() {});
+                    },
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // 3. Battery Optimization Status
+                  _buildStatusRow(
+                    title: '3. Battery Optimization',
+                    isGranted: _isBatteryIgnored,
+                    onFix: () async {
+                      await BatteryOptimizerHelper.requestIgnoreBatteryOptimizations();
+                      await _checkPermissions();
+                      setDialogState(() {});
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 6),
+
+                  // Phone-Specific Brand Instructions
+                  Text(
+                    'Her Phone Settings (Click to expand):',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                  const SizedBox(height: 6),
+                  ...BatteryOptimizerHelper.brandGuides.entries.map((entry) {
+                    final isHighlight = entry.key.contains('Vivo') || entry.key.contains('Samsung');
+                    return ExpansionTile(
+                      initiallyExpanded: isHighlight,
+                      title: Text(
+                        entry.key,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: isHighlight ? const Color(0xFFE85A88) : null,
+                        ),
+                      ),
+                      children: entry.value
+                          .map((step) => Padding(
+                                padding: const EdgeInsets.only(left: 12, right: 12, bottom: 6),
+                                child: Text(step, style: const TextStyle(fontSize: 11)),
+                              ))
+                          .toList(),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await BatteryOptimizerHelper.openAppSystemSettings();
+                },
+                child: const Text('Open App Info'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.blushPink),
+                icon: const Icon(Icons.alarm_on_rounded, size: 16, color: AppColors.deepPlum),
+                label: Text(
+                  'Test (5s)',
+                  style: GoogleFonts.poppins(color: AppColors.deepPlum, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+                onPressed: () async {
+                  await NotificationService().triggerTestAlarm();
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Test alarm will ring in 4 seconds! Lock screen now to test! 🔒🔔'),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -60,3 +60,4 @@ for folder, size in densities.items():
     print(f"Generated {folder}: {size}x{size} (ic_launcher.png & ic_launcher_round.png)")
 
 print("All TO DO launcher icons generated successfully!")
+

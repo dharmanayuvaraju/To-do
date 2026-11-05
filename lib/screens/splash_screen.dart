@@ -29,14 +29,15 @@ class _SplashScreenState extends State<SplashScreen> {
     await storage.init();
     await QuoteService().init();
     await NotificationService().init();
+
+    // Request core permissions first so exact alarms and notifications can be registered
+    await BatteryOptimizerHelper.requestAllCorePermissions();
+
+    // Now schedule permanent recurring alarms with permissions active
     await AlarmService().syncAndRescheduleAll();
 
-    // Softly request notification permissions on first launch
-    await BatteryOptimizerHelper.requestNotificationPermissions();
-    await BatteryOptimizerHelper.requestExactAlarmPermission();
-
     // Wait a moment for the sweet splash animations to play
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     if (mounted) {
       Navigator.pushReplacement(

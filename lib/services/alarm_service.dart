@@ -11,30 +11,17 @@ class AlarmService {
   final StorageService _storage = StorageService();
   final NotificationService _notificationService = NotificationService();
 
-  /// Initialize and reschedule all upcoming alarms for active medicines
+  /// Initialize and reschedule all upcoming recurring alarms for active medicines
   Future<void> syncAndRescheduleAll() async {
     await _notificationService.cancelAll();
-
-    final now = DateTime.now();
-    final medicines = _storage.medicines.where((m) => m.isActive).toList();
 
     // Check for any past doses today that were never taken (exceeded 60 mins) and mark them missed
     await _checkAndRecordMissedDoses();
 
-    // Schedule next 7 days of reminders for each active medicine
-    for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
-      final targetDate = now.add(Duration(days: dayOffset));
-      for (final med in medicines) {
-        if (med.isScheduledForDate(targetDate)) {
-          for (final time in med.times) {
-            await _notificationService.scheduleMedicineAlarm(
-              medicine: med,
-              time: time,
-              targetDate: targetDate,
-            );
-          }
-        }
-      }
+    // Schedule permanent repeating alarms directly in Android AlarmManager
+    final medicines = _storage.medicines.where((m) => m.isActive).toList();
+    for (final med in medicines) {
+      await _notificationService.scheduleRecurringMedicineAlarm(medicine: med);
     }
   }
 
