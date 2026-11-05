@@ -9,6 +9,7 @@ import '../services/quote_service.dart';
 import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
+import '../utils/battery_optimizer_helper.dart';
 import '../widgets/dial_clock_widget.dart';
 import '../widgets/blooming_flower_widget.dart';
 import '../widgets/medicine_card.dart';
