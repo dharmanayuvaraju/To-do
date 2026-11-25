@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/medicine.dart';
 import '../models/medicine_log.dart';
@@ -8,6 +8,7 @@ import '../services/storage_service.dart';
 import '../services/quote_service.dart';
 import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
+import '../services/partner_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/battery_optimizer_helper.dart';
 import '../utils/date_utils.dart';
@@ -89,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _storage.reloadFromDisk();
       if (mounted) setState(() {});
       _checkPermissions();
+      NotificationService().resyncTodayAlarms();
       AlarmService().syncAndRescheduleAll();
     }
   }
@@ -316,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF5277).withOpacity(0.3),
+                        color: const Color(0xFFFF5277).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -387,7 +389,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     medicineName: slot.medicine.name,
                     scheduledTime: slot.scheduledDateTime,
                   );
+                  await NotificationService().cancelTodayCascades(slot.medicine.id, slot.scheduledDateTime);
                   await AlarmService().syncAndRescheduleAll();
+                  unawaited(PartnerService.sendEvent(
+                    'taken',
+                    med: slot.medicine.name,
+                    medId: slot.medicine.id,
+                    scheduledTime: slot.scheduledDateTime,
+                  ));
                   if (context.mounted) {
                     FloatingHeartsOverlay.show(
                       context,
@@ -433,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1728).withOpacity(0.92) : Colors.white.withOpacity(0.92),
+        color: isDark ? const Color(0xFF1E1728).withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDark ? const Color(0xFF3B2A4D) : const Color(0xFFF0E5DE),
@@ -441,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : const Color(0xFFE8D7D0).withOpacity(0.4),
+            color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFFE8D7D0).withValues(alpha: 0.4),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -513,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3B0).withOpacity(isDark ? 0.2 : 0.6),
+                            color: const Color(0xFFFFF3B0).withValues(alpha: isDark ? 0.2 : 0.6),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
@@ -603,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF9F5F3),
+                  color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF9F5F3),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -652,7 +661,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.roseGold.withOpacity(0.5),
+                      color: AppColors.roseGold.withValues(alpha: 0.5),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -673,7 +682,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         )
                       : Image.asset(
-                          'assets/images/hero_star.jpg',
+                          'assets/images/me.jpg',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Image.asset('assets/images/me.jpg', fit: BoxFit.cover),
@@ -733,7 +742,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.lavender.withOpacity(0.25),
+              color: AppColors.lavender.withValues(alpha: 0.25),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -770,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.blushPink.withOpacity(0.4),
+              color: AppColors.blushPink.withValues(alpha: 0.4),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -807,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, size: 20),
-            color: isDark ? AppColors.lavender : AppColors.deepPlum.withOpacity(0.6),
+            color: isDark ? AppColors.lavender : AppColors.deepPlum.withValues(alpha: 0.6),
             onPressed: _refreshQuote,
           ),
         ],
@@ -826,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         color: isDark ? const Color(0xFF33202C) : const Color(0xFFFFF3CD),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? AppColors.blushPink.withOpacity(0.5) : const Color(0xFFFFC107),
+          color: isDark ? AppColors.blushPink.withValues(alpha: 0.5) : const Color(0xFFFFC107),
           width: 1.5,
         ),
       ),
@@ -897,7 +906,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.mintSuccess.withOpacity(0.2),
+              color: AppColors.mintSuccess.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text('Allowed ✅', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.mintSuccess)),
@@ -906,7 +915,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           TextButton(
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              backgroundColor: AppColors.blushPink.withOpacity(0.4),
+              backgroundColor: AppColors.blushPink.withValues(alpha: 0.4),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: onFix,
@@ -1103,7 +1112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -1174,8 +1183,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 medicineName: medicineName,
                 scheduledTime: todaySlot,
               );
-              await NotificationService().cancelMedicineReminders(medicineId);
+              await NotificationService().cancelTodayCascades(medicineId, todaySlot);
               await AlarmService().syncAndRescheduleAll();
+              unawaited(PartnerService.sendEvent(
+                'taken',
+                med: medicineName,
+                medId: medicineId,
+                scheduledTime: todaySlot,
+              ));
               if (mounted) {
                 FloatingHeartsOverlay.show(
                   context,
@@ -1197,10 +1212,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildBottomNav(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.nightPlum : Colors.white.withOpacity(0.9),
+        color: isDark ? AppColors.nightPlum : Colors.white.withValues(alpha: 0.9),
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
           ),
         ),
       ),

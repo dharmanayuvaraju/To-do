@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/storage_service.dart';
 import '../utils/app_colors.dart';
-import '../widgets/glass_container.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -63,14 +62,21 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   void _shareNote() {
+    final phone = _storage.babuPhone;
+    if (phone.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please set Babu's WhatsApp number in Settings first ❤️"),
+        ),
+      );
+      return;
+    }
     final note = _storage.loveNote.replaceAll('[MY NAME]', _storage.myName);
     Share.share('$note\n\n- Sent with love via Do It Now ❤️');
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
     final displayNote = _storage.loveNote.replaceAll('[MY NAME]', _storage.myName);
 
     return Scaffold(
@@ -80,7 +86,7 @@ class _MessageScreenState extends State<MessageScreen> {
           // Full Screen Star Photo Background
           Positioned.fill(
             child: Image.asset(
-              'assets/images/hero_star.jpg',
+              'assets/images/me.jpg',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Image.asset(
                 'assets/images/together_love.jpg',
@@ -97,9 +103,9 @@ class _MessageScreenState extends State<MessageScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.35),
-                    AppColors.nightIndigo.withOpacity(0.75),
-                    AppColors.nightIndigo.withOpacity(0.92),
+                    Colors.black.withValues(alpha: 0.35),
+                    AppColors.nightIndigo.withValues(alpha: 0.75),
+                    AppColors.nightIndigo.withValues(alpha: 0.92),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -149,11 +155,11 @@ class _MessageScreenState extends State<MessageScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF9F0).withOpacity(0.96), // warm parchment cream
+                    color: const Color(0xFFFFF9F0).withValues(alpha: 0.96), // warm parchment cream
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 25,
                         offset: const Offset(0, 10),
                       ),
@@ -190,7 +196,7 @@ class _MessageScreenState extends State<MessageScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.blushPink.withOpacity(0.5),
+                              color: AppColors.blushPink.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(

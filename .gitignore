@@ -10,6 +10,7 @@
 .history
 .svn/
 migrate_working_dir/
+flutter/
 
 # IntelliJ related
 *.iml
@@ -39,6 +40,11 @@ migrate_working_dir/
 **/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
+android/app/google-services.json
+*.jks
+*.keystore
+*key*.json
+*service_account*.json
 
 # Exceptions to keep
 !**/android/gradle/wrapper/gradle-wrapper.jar

@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import 'glass_container.dart';
@@ -27,16 +26,6 @@ class BloomingFlowerWidget extends StatelessWidget {
                 : streakDays <= 6
                     ? 3
                     : 4;
-
-    final String stageTelugu = streakDays == 0
-        ? 'Molakaththe Samayam 🌱'
-        : streakDays <= 2
-            ? 'Chiguristunna Mokka 🌿'
-            : streakDays <= 4
-                ? 'Mogga Thoduguthondi 🌷'
-                : streakDays <= 6
-                    ? 'Vikasistunna Puvvu 🌸'
-                    : 'Poorthiga Vikasincha Prema Puvvu! 🌺✨';
 
     final String stageEnglish = streakDays == 0
         ? 'A new seed planted with love'
@@ -67,7 +56,7 @@ class BloomingFlowerWidget extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.softPeach.withOpacity(0.6),
+                          color: AppColors.softPeach.withValues(alpha: 0.6),
                           blurRadius: 18,
                           spreadRadius: 4,
                         ),
@@ -95,10 +84,10 @@ class BloomingFlowerWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.mintSuccess.withOpacity(0.2),
+                        color: AppColors.mintSuccess.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColors.mintSuccess.withOpacity(0.5),
+                          color: AppColors.mintSuccess.withValues(alpha: 0.5),
                         ),
                       ),
                       child: Row(

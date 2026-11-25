@@ -1,44 +1,162 @@
 [
   {
-    "id": 1,
-    "telugu": "Nee arogyame mana baby arogyam. Mandulu vesuko bangaram ❤️",
-    "english": "Your health is our baby's health. Take your medicines, bangaram ❤️",
-    "isCustom": false
+    "id": "q1",
+    "telugu": "Bangaram, nee aarogyam naaku chala mukhyam. Mandulu marchipovaddu ❤️",
+    "english": "Sweetheart, your health means everything to me. Please take your medicine on time ❤️"
   },
   {
-    "id": 2,
-    "telugu": "Mandulu marchipothe mana baby ki ibbandi avthundi. Ippude vesuko 🙏",
-    "english": "If you forget medicines it troubles our baby. Please take it now 🙏",
-    "isCustom": false
+    "id": "q2",
+    "telugu": "Nuvvu navvuthunte naaku lokam kanipisthundi. Nee health jagrattha bangaram 💕",
+    "english": "Your smile is my whole world. Please take care of your health 💕"
   },
   {
-    "id": 3,
-    "telugu": "Nuvvu baagunte nenu baaguntanu. Tablet vesukunnava? ❤️",
-    "english": "I am fine only if you are fine. Did you take your tablet?",
-    "isCustom": false
+    "id": "q3",
+    "telugu": "Prathi kshanam nee thoduga untanu. Ee tablet vesukoni naaku call chey ❤️",
+    "english": "I am with you every single moment. Take this tablet and call me ❤️"
   },
   {
-    "id": 4,
-    "telugu": "Naa pranam nuvve, mana baby kooda. Mandu time ayindi! 🍼",
-    "english": "You are my life, and our baby too. It's medicine time!",
-    "isCustom": false
+    "id": "q4",
+    "telugu": "Naa prema kante ekkuvaga ninnu evaru chusukoru. Tablet vesuko Papa!",
+    "english": "No one can love and care for you more than I do. Take your tablet, Papa!"
   },
   {
-    "id": 5,
-    "telugu": "Okka tablet... mana baby ki oka pedda gift 🍼",
-    "english": "Just one tablet... is a big gift for our baby 🍼",
-    "isCustom": false
+    "id": "q5",
+    "telugu": "Nee kosame naa prathi aalochana. Mandulu vesukoni rest theesuko bangaram.",
+    "english": "Every thought of mine revolves around you. Take your medicine and rest well, darling."
   },
   {
-    "id": 6,
-    "telugu": "Naa kosam kaadu, mana baby kosam vesuko chinna 💕",
-    "english": "Not for me, take it for our baby chinna 💕",
-    "isCustom": false
+    "id": "q6",
+    "telugu": "Good morning naa bangaram! Ee roju first medicine time ayyindi, marchipoku ❤️",
+    "english": "Good morning my love! Time for your first dose of the day, do not forget ❤️"
   },
   {
-    "id": 7,
-    "telugu": "Ippude vesuko, tharvatha naaku message cheyyi ❤️",
-    "english": "Take it right now, and message me after ❤️",
-    "isCustom": false
+    "id": "q7",
+    "telugu": "Padukune mundu ee dose marchipovaddu. Sweet dreams naa Bangaram 💕",
+    "english": "Do not miss this dose before going to sleep. Sweet dreams my love 💕"
+  },
+  {
+    "id": "q8",
+    "telugu": "Mundu medicine vesuko, tharuvatha work chesko. Health first bangaram!",
+    "english": "First take your medicine, then do your work. Health always comes first darling!"
+  },
+  {
+    "id": "q9",
+    "telugu": "Nee chirunavve naaku balam. Tablet vesukoni manchi smile ivvu ❤️",
+    "english": "Your smile is my greatest strength. Take your tablet and give me that beautiful smile ❤️"
+  },
+  {
+    "id": "q10",
+    "telugu": "Babu eppudu nee pakkane untadu. Chakkaga tablet vesukoni water taagu bangaram.",
+    "english": "Babu is always right beside you. Take your tablet nicely and drink plenty of water."
+  },
+  {
+    "id": "q11",
+    "telugu": "Ninnu baga chusukovadame naa life goal. Please time ki medicine vesuko 💕",
+    "english": "Caring for you is my life goal. Please take your medicine strictly on time 💕"
+  },
+  {
+    "id": "q12",
+    "telugu": "Papa, konchem water taagi ee tablet vesuko. I love you so much ❤️",
+    "english": "Papa, drink some water and take this tablet. I love you so much ❤️"
+  },
+  {
+    "id": "q13",
+    "telugu": "Nee kosam nenu unnanu. Ee medicine vesukunte manam happy ga undochu 💕",
+    "english": "I am always here for you. Taking your medicine keeps us strong and happy 💕"
+  },
+  {
+    "id": "q14",
+    "telugu": "Alasata padaddu bangaram. Mandulu vesukoni konchem relax avvu.",
+    "english": "Do not exert yourself too much, darling. Take your medicines and relax a bit."
+  },
+  {
+    "id": "q15",
+    "telugu": "Nee kante naaku mukhyamainadi emi ledu. Tablet vesuko please bangaram ❤️",
+    "english": "Nothing in this world is more important to me than you. Please take your tablet ❤️"
+  },
+  {
+    "id": "q16",
+    "telugu": "Nuvvu safe ga health ga unte nenu prashanthamga untanu. Medicine vesuko Papa!",
+    "english": "When you are healthy and safe, my heart is peaceful. Take your medicine, Papa!"
+  },
+  {
+    "id": "q17",
+    "telugu": "Manchi pillavi kada, time ki medicine vesukuntav ani telusu. Love you bangaram 💕",
+    "english": "You are such a good girl, I know you will take your medicine on time. Love you darling 💕"
+  },
+  {
+    "id": "q18",
+    "telugu": "Okkasaari tablet vesukoni Babu ki WhatsApp message chey bangaram ❤️",
+    "english": "Take your tablet once and drop a WhatsApp message to Babu, darling ❤️"
+  },
+  {
+    "id": "q19",
+    "telugu": "Eppatiki manam ilage kalisi undali. Nee aarogyam chala mukhyam naaku 💕",
+    "english": "We will always stay together like this. Your health is so precious to me 💕"
+  },
+  {
+    "id": "q20",
+    "telugu": "Inka late cheyoddu bangaram, ippude dose theesuko. Babu watching over you ❤️",
+    "english": "Do not delay anymore darling, take your dose right now. Babu is watching over you ❤️"
+  },
+  {
+    "id": "q21",
+    "telugu": "Nee buggala pai chirunavve naa prapancham. Tablet vesukoni santhoshamga undu 💕",
+    "english": "The dimple and smile on your cheeks is my universe. Take your tablet and stay joyful 💕"
+  },
+  {
+    "id": "q22",
+    "telugu": "Time ki tindi, time ki mandulu. Babu maata vintavu kada bangaram?",
+    "english": "Food on time, medicine on time. You will listen to Babu's words, right darling?"
+  },
+  {
+    "id": "q23",
+    "telugu": "Nee sneham, nee prema naaku devudu ichina goppa varam. Take care of yourself ❤️",
+    "english": "Your love is God's greatest gift to me. Take good care of yourself ❤️"
+  },
+  {
+    "id": "q24",
+    "telugu": "Dose time vachindi! Quick ga vesukoni naaku okka flying kiss pampu bangaram 💕",
+    "english": "Dose time has arrived! Quickly take it and send me a flying kiss darling 💕"
+  },
+  {
+    "id": "q25",
+    "telugu": "Nee prathi badha nenu theesukuntanu. Nuvvu tablet vesukunte naaku dhairyam ❤️",
+    "english": "I would take away every pain of yours. Seeing you take your tablets gives me peace ❤️"
+  },
+  {
+    "id": "q26",
+    "telugu": "Chakkaga nidrapovali ante evening dose marchipovaddu Papa!",
+    "english": "To sleep soundly tonight, do not forget your evening dose Papa!"
+  },
+  {
+    "id": "q27",
+    "telugu": "Mee Babu premato chepputhunnadu: Tablet ippude theesuko bangaram ❤️",
+    "english": "Your Babu says with all his love: Take your tablet right this second darling ❤️"
+  },
+  {
+    "id": "q28",
+    "telugu": "Nee wellness kosam daily reminder. Always love you Papa 💕",
+    "english": "A daily caring reminder for your wellness. Always loving you Papa 💕"
+  },
+  {
+    "id": "q29",
+    "telugu": "Ee tablet vesukoni rojantha energetic ga undu. Have a wonderful day bangaram ❤️",
+    "english": "Take this tablet and stay energetic all day long. Have a wonderful day darling ❤️"
+  },
+  {
+    "id": "q30",
+    "telugu": "Snooze cheyoddu bangaram! Ippude finish chesthe tension free ga undochu 💕",
+    "english": "Do not snooze darling! Finish it right now so you can be tension-free 💕"
+  },
+  {
+    "id": "q31",
+    "telugu": "Nee aayushu, nee aarogyam kosame naa prardhana. Mandulu vesuko Papa ❤️",
+    "english": "My prayers are always for your long life and radiant health. Take your medicine Papa ❤️"
+  },
+  {
+    "id": "q32",
+    "telugu": "Very proud of you bangaram! Daily discipline tho health maintain chey 💕",
+    "english": "So proud of you darling! Keep maintaining your health with daily discipline 💕"
   }
 ]

@@ -12,7 +12,6 @@ class AppTheme {
         primary: AppColors.deepPlum,
         secondary: AppColors.blushPink,
         surface: Colors.white,
-        background: AppColors.cream,
         onPrimary: Colors.white,
         onSecondary: AppColors.deepPlum,
       ),
@@ -43,7 +42,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
@@ -67,7 +66,6 @@ class AppTheme {
         primary: AppColors.lavender,
         secondary: AppColors.blushPink,
         surface: AppColors.nightPlum,
-        background: AppColors.nightIndigo,
         onPrimary: AppColors.nightIndigo,
         onSecondary: Colors.white,
       ),
@@ -98,7 +96,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.nightPlum.withOpacity(0.7),
+        color: AppColors.nightPlum.withValues(alpha: 0.7),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),

@@ -1,0 +1,1 @@
+{"rules":{".read":false,".write":false,"pairs":{"$code":{"receiverToken":{".read":"auth != null",".write":"auth != null && newData.isString() && newData.val().length < 400"}}}}}

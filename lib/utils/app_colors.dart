@@ -64,8 +64,8 @@ class AppColors {
 
   // Glassmorphism overlays
   static Color glassBg(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.08) : Colors.white.withOpacity(0.65);
+      isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.65);
 
   static Color glassBorder(bool isDark) =>
-      isDark ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.4);
+      isDark ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.4);
 }

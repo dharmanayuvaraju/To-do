@@ -1,25 +1,45 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/medicine.dart';
 import '../utils/constants.dart';
 import 'storage_service.dart';
 import 'quote_service.dart';
+import 'partner_service.dart';
 
 // Top-level background notification response handler
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) async {
   WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
   tz.initializeTimeZones();
-  await _handleNotificationAction(notificationResponse);
+  await handleNotificationAction(notificationResponse, isBackgroundIsolate: true);
 }
 
-Future<void> _handleNotificationAction(NotificationResponse response) async {
+Future<void> handleNotificationAction(
+  NotificationResponse response, {
+  bool isBackgroundIsolate = false,
+}) async {
+  final actionId = response.actionId;
+
+  // Notification body tapped -> open app / alarm screen
+  if (actionId == null || actionId.isEmpty) {
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      try {
+        final data = jsonDecode(response.payload!);
+        NotificationService().onNotificationOpened?.call(data);
+      } catch (_) {}
+    }
+    return;
+  }
+
   final payload = response.payload;
   if (payload == null || payload.isEmpty) return;
 
@@ -27,13 +47,13 @@ Future<void> _handleNotificationAction(NotificationResponse response) async {
     final Map<String, dynamic> data = jsonDecode(payload);
     final String medicineId = data['medicineId'] ?? '';
     final String medicineName = data['medicineName'] ?? 'Tablet';
+    final int baseId = data['baseId'] ?? (response.id != null ? (response.id! ~/ 10) * 10 : 0);
     final String scheduledIso = data['scheduledTime'] ?? '';
     final DateTime rawScheduled = scheduledIso.isNotEmpty
         ? (DateTime.tryParse(scheduledIso) ?? DateTime.now())
         : DateTime.now();
 
     final now = DateTime.now();
-    // Normalize to TODAY's date at the scheduled hour & minute
     final DateTime scheduledTime = DateTime(
       now.year,
       now.month,
@@ -44,9 +64,12 @@ Future<void> _handleNotificationAction(NotificationResponse response) async {
 
     final storage = StorageService();
     await storage.init();
-    final notifPlugin = FlutterLocalNotificationsPlugin();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
 
-    if (response.actionId == AppConstants.actionTaken) {
+    final notifPlugin = NotificationService.plugin;
+
+    if (actionId == 'taken' || actionId == AppConstants.actionTaken) {
       // 1. Mark as taken in storage
       await storage.markAsTaken(
         medicineId: medicineId,
@@ -59,108 +82,70 @@ Future<void> _handleNotificationAction(NotificationResponse response) async {
         await notifPlugin.cancel(response.id!);
       }
 
-      // 3. Cancel remaining repeat cascade notifications for this dose today
-      for (int repeat = 1; repeat <= 6; repeat++) {
-        final repeatOffset = repeat * 10;
-        final weekdayId = NotificationService.getNotificationId(
-          medicineId,
-          scheduledTime.weekday,
-          scheduledTime.hour,
-          scheduledTime.minute,
-          repeatOffset,
-        );
-        final everydayId = NotificationService.getNotificationId(
-          medicineId,
-          0,
-          scheduledTime.hour,
-          scheduledTime.minute,
-          repeatOffset,
-        );
-        await notifPlugin.cancel(weekdayId);
-        await notifPlugin.cancel(everydayId);
+      // 3. Cancel deterministic baseId and all 6 repeats + snooze (baseId..baseId + 9)
+      if (baseId > 0) {
+        for (int i = 0; i <= 9; i++) {
+          await notifPlugin.cancel(baseId + i);
+        }
+      }
+      await NotificationService().cancelTodayCascades(medicineId, scheduledTime);
+
+      // 4. Partner Alert: Send push to his phone
+      if (isBackgroundIsolate) {
+        await PartnerService.sendEvent(
+          'taken',
+          med: medicineName,
+          medId: medicineId,
+          scheduledTime: scheduledTime,
+        ).timeout(const Duration(seconds: 6), onTimeout: () {});
+      } else {
+        unawaited(PartnerService.sendEvent(
+          'taken',
+          med: medicineName,
+          medId: medicineId,
+          scheduledTime: scheduledTime,
+        ));
+      }
+    } else if (actionId == 'snooze' || actionId == AppConstants.actionSnooze) {
+      // 1. Dismiss the current ringing notification
+      if (response.id != null) {
+        await notifPlugin.cancel(response.id!);
       }
 
-      // Cancel any pending snooze notification
-      final snoozeId = (medicineId.hashCode + 999).abs() % 100000000;
-      await notifPlugin.cancel(snoozeId);
-
-      // 4. Show lightweight success confirmation so she knows it was recorded
-      await notifPlugin.show(
-        (medicineId.hashCode + 888).abs() % 100000000,
-        'Good girl Papa! ❤️ Marked as Taken ✅',
-        '$medicineName vesukunnav, very good! Premato mee Babu ❤️',
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'do_it_now_status_channel',
-            'Do It Now Status',
-            channelDescription: 'Confirmation alerts for taken medicines',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
-            autoCancel: true,
-            timeoutAfter: 8000,
-          ),
-        ),
-      );
-    } else if (response.actionId == AppConstants.actionSnooze) {
-      // 1. Mark as snoozed in storage
+      // 2. Mark as snoozed in storage
       await storage.markAsSnoozed(
         medicineId: medicineId,
         medicineName: medicineName,
         scheduledTime: scheduledTime,
       );
 
-      // 2. Dismiss the current ringing notification
-      if (response.id != null) {
-        await notifPlugin.cancel(response.id!);
-      }
-
       // 3. Cancel today's remaining cascade nag alarms so they don't ring at the same time as snooze
-      for (int repeat = 1; repeat <= 6; repeat++) {
-        final repeatOffset = repeat * 10;
-        final weekdayId = NotificationService.getNotificationId(
-          medicineId,
-          scheduledTime.weekday,
-          scheduledTime.hour,
-          scheduledTime.minute,
-          repeatOffset,
-        );
-        final everydayId = NotificationService.getNotificationId(
-          medicineId,
-          0,
-          scheduledTime.hour,
-          scheduledTime.minute,
-          repeatOffset,
-        );
-        await notifPlugin.cancel(weekdayId);
-        await notifPlugin.cancel(everydayId);
-      }
+      await NotificationService().cancelTodayCascades(medicineId, scheduledTime);
 
-      // 4. Schedule the snooze alarm 10 minutes from now
-      final notifService = NotificationService();
-      await notifService.scheduleSnoozeNotification(
+      // 4. Schedule one new snooze notification 10 minutes from now
+      await NotificationService().scheduleSnoozeNotification(
         medicineId: medicineId,
         medicineName: medicineName,
         scheduledTime: scheduledTime,
         snoozeMinutes: storage.snoozeDurationMinutes,
       );
 
-      // 5. Immediately show the playful heads-up alert: "😠❤️ musukoni mundu vesuko!"
-      await notifPlugin.show(
-        (medicineId.hashCode + 777).abs() % 100000000,
-        '😠❤️ musukoni mundu vesuko!',
-        'mundu medicine vesuko tharuvtha work chesko! Chalu inka snooze chesindi bangaram ❤️',
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'do_it_now_status_channel',
-            'Do It Now Status',
-            channelDescription: 'Snooze alerts',
-            importance: Importance.high,
-            priority: Priority.high,
-            autoCancel: true,
-            timeoutAfter: 15000,
-          ),
-        ),
-      );
+      // 5. Partner Alert: send snooze event
+      if (isBackgroundIsolate) {
+        await PartnerService.sendEvent(
+          'snooze',
+          med: medicineName,
+          medId: medicineId,
+          scheduledTime: scheduledTime,
+        ).timeout(const Duration(seconds: 6), onTimeout: () {});
+      } else {
+        unawaited(PartnerService.sendEvent(
+          'snooze',
+          med: medicineName,
+          medId: medicineId,
+          scheduledTime: scheduledTime,
+        ));
+      }
     }
   } catch (e) {
     debugPrint('Error handling notification action: $e');
@@ -172,7 +157,8 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+  /// ONE singleton FlutterLocalNotificationsPlugin instance, used everywhere
+  static final FlutterLocalNotificationsPlugin plugin =
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
@@ -180,26 +166,23 @@ class NotificationService {
   // Callback when user taps notification body to open UI
   Function(Map<String, dynamic>)? onNotificationOpened;
 
-  // Callback when user taps snooze action button on notification to open the required popup
+  // Callback when user taps snooze action
   Function(Map<String, dynamic>)? onSnoozeOpened;
 
   Future<void> init() async {
     if (_isInitialized) return;
 
-    // Initialize Timezone database
     tz.initializeTimeZones();
     try {
       final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(currentTimeZone));
-    } catch (e) {
-      tz.setLocalLocation(tz.getLocation('Asia/Kolkata')); // Safe fallback
+    } catch (_) {
+      tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
     }
 
-    // Android initialization
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@drawable/ic_notification');
 
-    // iOS/macOS initialization
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -213,43 +196,22 @@ class NotificationService {
       iOS: initializationSettingsDarwin,
     );
 
-    await _notificationsPlugin.initialize(
+    await plugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        if (response.actionId == AppConstants.actionTaken) {
-          // Action Taken: handle silently in background without redirecting to app!
-          await _handleNotificationAction(response);
-        } else if (response.actionId == AppConstants.actionSnooze) {
-          // Action Snooze: opens the app to show "mundu medicine vesuko tharuvtha work chesko!" popup
-          if (response.payload != null && response.payload!.isNotEmpty) {
-            try {
-              final data = jsonDecode(response.payload!);
-              onSnoozeOpened?.call(data);
-            } catch (_) {}
-          }
-        } else {
-          // Notification body tapped -> open AlarmScreen
-          if (response.payload != null && response.payload!.isNotEmpty) {
-            try {
-              final data = jsonDecode(response.payload!);
-              onNotificationOpened?.call(data);
-            } catch (_) {}
-          }
-        }
+        await handleNotificationAction(response, isBackgroundIsolate: false);
       },
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
-    // Create High-Priority Notification Channel for Android
-    await _createNotificationChannel();
+    await _createNotificationChannels();
 
     _isInitialized = true;
   }
 
-  Future<void> _createNotificationChannel() async {
-    final vibrationPattern = Int64List.fromList([0, 1000, 500, 1000, 500, 1000]);
-
-    const androidChannel = AndroidNotificationChannel(
+  Future<void> _createNotificationChannels() async {
+    // Primary Alarm Channel
+    const androidAlarmChannel = AndroidNotificationChannel(
       AppConstants.notificationChannelId,
       AppConstants.notificationChannelName,
       description: AppConstants.notificationChannelDesc,
@@ -260,20 +222,30 @@ class NotificationService {
       showBadge: true,
     );
 
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    // Partner Alert Push Channel (for His phone)
+    const partnerAlertChannel = AndroidNotificationChannel(
+      'partner_alerts',
+      'Partner alerts',
+      description: 'Alerts when partner takes or snoozes medicine',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    final androidPlugin = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidPlugin != null) {
-      await androidPlugin.createNotificationChannel(androidChannel);
+      await androidPlugin.createNotificationChannel(androidAlarmChannel);
+      await androidPlugin.createNotificationChannel(partnerAlertChannel);
     }
   }
 
-  /// Deterministic, 100% collision-free notification ID generator
-  static int getNotificationId(String medicineId, int dayOfWeek, int hour, int minute, [int repeatOffsetMinutes = 0]) {
-    int hash = medicineId.hashCode & 0x0FFFFFFF;
-    hash = (hash * 31 + (dayOfWeek * 1440 + hour * 60 + minute + repeatOffsetMinutes)) & 0x7FFFFFFF;
-    return hash % 100000000;
+  /// Deterministic ID generator: base = medicineId * 1000 + dayIndex * 100 + slot
+  static int getBaseId(String medicineId, int dayIndex, int hour, int minute) {
+    int hash = medicineId.hashCode.abs() % 10000;
+    return (hash * 1000 + (dayIndex % 10) * 100 + ((hour * 60 + minute) % 100) * 10) % 100000000;
   }
 
   tz.TZDateTime _nextInstanceOfTime(TimeOfDay time) {
@@ -300,7 +272,7 @@ class NotificationService {
     return scheduledDate;
   }
 
-  /// Schedule permanent daily or weekly repeating alarms directly with Android OS
+  /// Schedule recurring medicine alarms with deterministic IDs
   Future<void> scheduleRecurringMedicineAlarm({
     required Medicine medicine,
   }) async {
@@ -310,12 +282,12 @@ class NotificationService {
 
     for (final time in medicine.times) {
       if (isEveryday) {
-        // Everyday repeating alarm (matchDateTimeComponents: DateTimeComponents.time)
         final tz.TZDateTime nextTime = _nextInstanceOfTime(time);
-        final int primaryId = getNotificationId(medicine.id, 0, time.hour, time.minute, 0);
+        final int baseId = getBaseId(medicine.id, 0, time.hour, time.minute);
 
         await _scheduleSingleZoned(
-          id: primaryId,
+          id: baseId,
+          baseId: baseId,
           title: '❤️ Reminder Time Bangaram! ❤️',
           body: '${medicine.name} (${medicine.dose} ${medicine.doseUnit})',
           scheduledDate: nextTime,
@@ -324,10 +296,10 @@ class NotificationService {
           scheduledTime: nextTime,
         );
 
-        // 6 repeat reminders (every 10 minutes) with unique IDs
+        // 6 repeat reminders (every 10 minutes) with deterministic IDs: baseId + 1..6
         for (int repeat = 1; repeat <= 6; repeat++) {
           final tz.TZDateTime repeatTime = nextTime.add(Duration(minutes: 10 * repeat));
-          final int repeatId = getNotificationId(medicine.id, 0, time.hour, time.minute, repeat * 10);
+          final int repeatId = baseId + repeat;
           final isFinalRepeat = repeat == 6;
           final repeatTitle = isFinalRepeat
               ? '⚠️ Please Bangaram... Time for your reminder ❤️'
@@ -335,6 +307,7 @@ class NotificationService {
 
           await _scheduleSingleZoned(
             id: repeatId,
+            baseId: baseId,
             title: repeatTitle,
             body: '${medicine.name} (${medicine.dose} ${medicine.doseUnit})\nPlease do not miss this!',
             scheduledDate: repeatTime,
@@ -344,13 +317,13 @@ class NotificationService {
           );
         }
       } else {
-        // Specific days of week repeating alarm (matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime)
         for (final dayOfWeek in medicine.daysOfWeek) {
           final tz.TZDateTime nextDayTime = _nextInstanceOfDayAndTime(dayOfWeek, time);
-          final int primaryId = getNotificationId(medicine.id, dayOfWeek, time.hour, time.minute, 0);
+          final int baseId = getBaseId(medicine.id, dayOfWeek, time.hour, time.minute);
 
           await _scheduleSingleZoned(
-            id: primaryId,
+            id: baseId,
+            baseId: baseId,
             title: '❤️ Reminder Time Bangaram! ❤️',
             body: '${medicine.name} (${medicine.dose} ${medicine.doseUnit})',
             scheduledDate: nextDayTime,
@@ -359,10 +332,9 @@ class NotificationService {
             scheduledTime: nextDayTime,
           );
 
-          // 6 repeat reminders on that day
           for (int repeat = 1; repeat <= 6; repeat++) {
             final tz.TZDateTime repeatTime = nextDayTime.add(Duration(minutes: 10 * repeat));
-            final int repeatId = getNotificationId(medicine.id, dayOfWeek, time.hour, time.minute, repeat * 10);
+            final int repeatId = baseId + repeat;
             final isFinalRepeat = repeat == 6;
             final repeatTitle = isFinalRepeat
                 ? '⚠️ Please Bangaram... Time for your reminder ❤️'
@@ -370,6 +342,7 @@ class NotificationService {
 
             await _scheduleSingleZoned(
               id: repeatId,
+              baseId: baseId,
               title: repeatTitle,
               body: '${medicine.name} (${medicine.dose} ${medicine.doseUnit})\nPlease do not miss this!',
               scheduledDate: repeatTime,
@@ -383,9 +356,9 @@ class NotificationService {
     }
   }
 
-  /// Internal zoned scheduler with automatic exact-to-inexact fallback
   Future<void> _scheduleSingleZoned({
     required int id,
+    required int baseId,
     required String title,
     required String body,
     required tz.TZDateTime scheduledDate,
@@ -397,6 +370,7 @@ class NotificationService {
     final payload = jsonEncode({
       'medicineId': medicine.id,
       'medicineName': medicine.name,
+      'baseId': baseId,
       'dose': medicine.dose,
       'doseUnit': medicine.doseUnit,
       'note': medicine.note,
@@ -428,81 +402,68 @@ class NotificationService {
         contentTitle: title,
         summaryText: 'Do It Now Care',
       ),
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          AppConstants.actionTaken,
-          'Taken ✅',
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'taken',
+          'Taken',
+          cancelNotification: true,
           showsUserInterface: false,
-          cancelNotification: true,
         ),
-        const AndroidNotificationAction(
-          AppConstants.actionSnooze,
-          'Snooze 10m ⏳',
-          showsUserInterface: true,
+        AndroidNotificationAction(
+          'snooze',
+          'Snooze 10m',
           cancelNotification: true,
+          showsUserInterface: false,
         ),
       ],
     );
 
-    final notificationDetails = NotificationDetails(android: androidDetails);
-
     try {
-      await _notificationsPlugin.zonedSchedule(
+      await plugin.zonedSchedule(
         id,
         title,
         body,
         scheduledDate,
-        notificationDetails,
+        NotificationDetails(android: androidDetails),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: matchDateTimeComponents,
         payload: payload,
       );
-    } catch (e) {
-      debugPrint('Exact alarm failed for ID $id ($e). Retrying with inexactAllowWhileIdle fallback.');
+    } catch (_) {
       try {
-        await _notificationsPlugin.zonedSchedule(
+        await plugin.zonedSchedule(
           id,
           title,
           body,
           scheduledDate,
-          notificationDetails,
+          NotificationDetails(android: androidDetails),
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: matchDateTimeComponents,
           payload: payload,
         );
-      } catch (e2) {
-        debugPrint('Fallback alarm also failed for ID $id: $e2');
-      }
+      } catch (_) {}
     }
   }
 
-  /// Backward-compatible single schedule method
-  Future<void> scheduleMedicineAlarm({
-    required Medicine medicine,
-    required TimeOfDay time,
-    required DateTime targetDate,
-  }) async {
-    await scheduleRecurringMedicineAlarm(medicine: medicine);
-  }
-
-  /// Schedule immediate snooze notification (e.g. 10 minutes from now)
+  /// Schedule 10-minute snooze notification
   Future<void> scheduleSnoozeNotification({
     required String medicineId,
     required String medicineName,
     required DateTime scheduledTime,
     int snoozeMinutes = 10,
   }) async {
-    final quote = QuoteService().getRandomQuote();
-    final snoozeId = (medicineId.hashCode + 999).abs() % 100000000;
+    final baseId = getBaseId(medicineId, 0, scheduledTime.hour, scheduledTime.minute);
+    final snoozeId = baseId + 9;
     final snoozeTarget = tz.TZDateTime.now(tz.local).add(Duration(minutes: snoozeMinutes));
 
     final payload = jsonEncode({
       'medicineId': medicineId,
       'medicineName': medicineName,
+      'baseId': baseId,
       'scheduledTime': scheduledTime.toIso8601String(),
     });
 
@@ -519,17 +480,17 @@ class NotificationService {
       playSound: true,
       enableVibration: true,
       color: const Color(0xFFF3A638),
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          AppConstants.actionTaken,
-          'Taken ✅',
-          showsUserInterface: false,
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'taken',
+          'Taken',
           cancelNotification: true,
+          showsUserInterface: false,
         ),
       ],
     );
 
-    await _notificationsPlugin.zonedSchedule(
+    await plugin.zonedSchedule(
       snoozeId,
       '😠❤️ musukoni mundu vesuko!',
       'mundu medicine vesuko tharuvtha work chesko! Ippude $medicineName vesuko bangaram ❤️',
@@ -544,42 +505,46 @@ class NotificationService {
 
   /// Cancel all notifications for a specific medicine
   Future<void> cancelMedicineReminders(String medicineId) async {
-    final baseId = medicineId.hashCode;
-    for (int i = 0; i <= 7; i++) {
-      await _notificationsPlugin.cancel((baseId + i).abs() % 100000000);
+    for (int day = 0; day <= 7; day++) {
+      for (int slot = 0; slot <= 24; slot++) {
+        final base = getBaseId(medicineId, day, slot, 0);
+        for (int i = 0; i <= 9; i++) {
+          await plugin.cancel(base + i);
+        }
+      }
     }
-    await _notificationsPlugin.cancel((baseId + 999).abs() % 100000000);
   }
 
   /// Cancel remaining cascade nag reminders for today's dose
   Future<void> cancelTodayCascades(String medicineId, DateTime scheduledTime) async {
-    for (int repeat = 1; repeat <= 6; repeat++) {
-      final repeatOffset = repeat * 10;
-      final weekdayId = getNotificationId(
-        medicineId,
-        scheduledTime.weekday,
-        scheduledTime.hour,
-        scheduledTime.minute,
-        repeatOffset,
-      );
-      final everydayId = getNotificationId(
-        medicineId,
-        0,
-        scheduledTime.hour,
-        scheduledTime.minute,
-        repeatOffset,
-      );
-      await _notificationsPlugin.cancel(weekdayId);
-      await _notificationsPlugin.cancel(everydayId);
+    final weekdayBase = getBaseId(medicineId, scheduledTime.weekday, scheduledTime.hour, scheduledTime.minute);
+    final everydayBase = getBaseId(medicineId, 0, scheduledTime.hour, scheduledTime.minute);
+
+    for (int i = 0; i <= 9; i++) {
+      await plugin.cancel(weekdayBase + i);
+      await plugin.cancel(everydayBase + i);
     }
   }
 
-  /// Cancel all scheduled notifications across entire app
-  Future<void> cancelAll() async {
-    await _notificationsPlugin.cancelAll();
+  /// On app start and after every Taken, re-sync: cancel all repeats for doses already taken today
+  Future<void> resyncTodayAlarms() async {
+    try {
+      final storage = StorageService();
+      await storage.init();
+      final todayLogs = storage.todayLogs;
+      for (final log in todayLogs) {
+        if (log.isTaken) {
+          await cancelTodayCascades(log.medicineId, log.scheduledTime);
+        }
+      }
+    } catch (_) {}
   }
 
-  /// Instant test alarm trigger (for verifying sound, vibration & UI in 5 seconds)
+  Future<void> cancelAll() async {
+    await plugin.cancelAll();
+  }
+
+  /// Instant test alarm trigger
   Future<void> triggerTestAlarm() async {
     final quote = QuoteService().getRandomQuote();
     final testTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 4));
@@ -596,27 +561,23 @@ class NotificationService {
       sound: const RawResourceAndroidNotificationSound('alarm_chime'),
       playSound: true,
       enableVibration: true,
-      styleInformation: BigTextStyleInformation(
-        '${quote.telugu}\n\nTest reminder! Notification, sound, and vibration are active ❤️',
-        contentTitle: '❤️ Test Reminder',
-      ),
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          AppConstants.actionTaken,
-          'Taken ✅',
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'taken',
+          'Taken',
+          cancelNotification: true,
           showsUserInterface: false,
-          cancelNotification: true,
         ),
-        const AndroidNotificationAction(
-          AppConstants.actionSnooze,
-          'Snooze 10m ⏳',
-          showsUserInterface: true,
+        AndroidNotificationAction(
+          'snooze',
+          'Snooze 10m',
           cancelNotification: true,
+          showsUserInterface: false,
         ),
       ],
     );
 
-    await _notificationsPlugin.zonedSchedule(
+    await plugin.zonedSchedule(
       999999,
       '❤️ Test Reminder',
       quote.telugu,
@@ -628,6 +589,7 @@ class NotificationService {
       payload: jsonEncode({
         'medicineId': 'test_med',
         'medicineName': 'Test Reminder',
+        'baseId': 999990,
         'dose': '1',
         'doseUnit': 'Dose',
         'note': 'Test alarm ringing on schedule!',

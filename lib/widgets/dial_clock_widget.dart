@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/medicine.dart';
 import '../utils/app_colors.dart';
@@ -68,8 +67,8 @@ class DialClockWidget extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: isNight
-                          ? AppColors.lavender.withOpacity(0.35)
-                          : AppColors.softPeach.withOpacity(0.5),
+                          ? AppColors.lavender.withValues(alpha: 0.35)
+                          : AppColors.softPeach.withValues(alpha: 0.5),
                       blurRadius: 40,
                       spreadRadius: 10,
                     ),
@@ -96,20 +95,20 @@ class DialClockWidget extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: isNight
                         ? [
-                            const Color(0xFF2E2042).withOpacity(0.95),
-                            const Color(0xFF1B1528).withOpacity(0.95),
+                            const Color(0xFF2E2042).withValues(alpha: 0.95),
+                            const Color(0xFF1B1528).withValues(alpha: 0.95),
                           ]
                         : [
-                            Colors.white.withOpacity(0.95),
-                            const Color(0xFFFFF0F5).withOpacity(0.9),
+                            Colors.white.withValues(alpha: 0.95),
+                            const Color(0xFFFFF0F5).withValues(alpha: 0.9),
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   border: Border.all(
                     color: isNight
-                        ? AppColors.lavender.withOpacity(0.4)
-                        : AppColors.blushPink.withOpacity(0.6),
+                        ? AppColors.lavender.withValues(alpha: 0.4)
+                        : AppColors.blushPink.withValues(alpha: 0.6),
                     width: 2,
                   ),
                 ),
@@ -137,7 +136,7 @@ class DialClockWidget extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               color: isNight
                                   ? AppColors.lavender
-                                  : AppColors.deepPlum.withOpacity(0.7),
+                                  : AppColors.deepPlum.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -236,8 +235,8 @@ class _DialProgressPainter extends CustomPainter {
     // Background track ring
     final bgPaint = Paint()
       ..color = isDark
-          ? Colors.white.withOpacity(0.08)
-          : AppColors.lavender.withOpacity(0.2)
+          ? Colors.white.withValues(alpha: 0.08)
+          : AppColors.lavender.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10;
 

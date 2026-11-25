@@ -5,13 +5,39 @@ Crafted with love, warmth, and care as a heartfelt surprise for her. Designed ar
 
 ---
 
+## 🔔 Partner Push Alerts (Free Spark Plan FCM Direct)
+
+When **SHE** taps **Taken** (either on the notification action button or inside the app), **HE** instantly receives a high-priority push notification on his phone within about 3 seconds, even if his app is completely closed.
+
+- **100% Free Spark Plan:** No credit card, no Blaze billing, and no Cloud Functions required.
+- **Direct FCM v1 API:** Her phone sends push notifications directly to the Google FCM HTTP v1 API using a restricted service account sender key.
+- **His Phone:** Registers its device FCM token in Firebase Realtime Database under an unguessable 34-character pair code (starts with `dn...`).
+- **Offline Delivery:** If Her phone is offline when tapping Taken, the event is saved to an offline queue on her phone and automatically delivered as soon as the phone is online and the app or a reminder runs, with the original time recorded.
+
+### Simple Pairing Steps
+1. **On His Phone:**
+   - Open **Do It Now > Settings > Partner Alerts**, choose **"I get alerts (His)"**.
+   - Tap **Copy** or **Share** to send his pair code to Her via WhatsApp.
+   - Configure Battery: **Settings > Apps > Do It Now > Battery > Unrestricted** and enable **Autostart**.
+2. **On Her Phone:**
+   - Open **Do It Now > Settings > Partner Alerts**, choose **"I take medicine (Her)"**.
+   - Paste His pair code into **His Pair Code**.
+   - Paste the service account JSON key into **Sender Key**.
+   - Tap **Save Settings**, then tap **Send test alert to his phone**.
+   - His phone will show **"Test alert: Do It Now is connected ❤️"** within 3 seconds!
+
+> [!NOTE]
+> The sender key has only one permission (`cloudmessaging.messages.create`) and is stored securely in private local storage on Her phone only. It is never committed to Git or baked into APK assets. If it ever leaks, simply delete it in Google Cloud Console > IAM & Admin > Service Accounts > fcm-sender > Keys and generate a new one.
+
+---
+
 ## 📸 Personal Photos & Assets
 
 The app uses your couple photos placed in `assets/images/`:
-- `assets/images/hero_star.jpg` & `assets/images/me.jpg` — **Star Hero Image** (sweet embrace): Used on the Home screen header hero avatar with glowing aura, Splash screen central hero, Alarm screen backdrop, and Love Letter backdrop.
+- `assets/images/me.jpg` — **Star Hero Image** (sweet embrace): Used on the Home screen header hero avatar with glowing aura, Splash screen central hero, Alarm screen backdrop, and Love Letter backdrop.
 - `assets/images/together_love.jpg` — Romantic couple gazing photo.
 - `assets/images/together.jpg` — Couple portrait backdrop.
-- `assets/quotes.json` — 7 curated Telugu quotes loaded into the app.
+- `assets/quotes.json` — 32 curated loving Telugu quotes loaded into the app.
 
 ---
 
@@ -32,55 +58,46 @@ The app uses your couple photos placed in `assets/images/`:
    - Shows action buttons: `Taken / తీసుకున్నాను ✅` and `Snooze 10m / 10 నిమిషాలు ఆపు ⏳`.
    - Automatically repeats every 10 minutes up to 6 times if unanswered.
    - If not marked taken after 60 minutes, records as `Missed` in history.
-2. **Glowing Sun-and-Moon Countdown Dial:**
+   - Re-syncs on app launch to cancel any pending repeat nag alarms for doses already taken today.
+2. **Instant Partner Push Notifications:**
+   - She marks dose as Taken -> He instantly receives a push alert.
+3. **Glowing Sun-and-Moon Countdown Dial:**
    - Circular progress ring showing time remaining until the next medicine dose.
    - Celestial icon automatically toggles between radiant sun ☀️ and crescent moon 🌙.
-3. **Growing Plant / Blooming Flower Streak:**
+4. **Growing Plant / Blooming Flower Streak:**
    - Plant visually grows from a seedling in soil (Day 0) → sprout (Days 1-2) → flower bud (Days 3-4) → blooming petals (Days 5-6) → radiant full blooming lotus/rose (Day 7+).
-4. **Floating Hearts & Teddy Celebration:**
-   - Tapping "Taken" triggers haptic feedback, 25 floating pastel particles, and a sweet teddy/baby celebration popup.
-5. **Telugu Quotes & Typography:**
-   - Google Fonts with Telugu rendering (`Noto Sans Telugu` and `Ramabhadra`).
+5. **Floating Hearts & Teddy Celebration:**
+   - Tapping "Taken" triggers haptic feedback, 25 floating pastel particles, and a sweet celebration popup.
+6. **Telugu Quotes & Typography:**
+   - Bundled offline `Noto Sans Telugu` and `Ramabhadra` TTF fonts.
    - Quotes refresh on home screen and display prominently during alarms.
-6. **"Message from [MY NAME]" Screen:**
+7. **"Message from Babu" Screen:**
    - Full-screen photo + handwritten-style love letter card. Customizable directly inside the app.
-7. **Full Offline Architecture:**
-   - Zero login, zero backend, 100% private. Data stored safely using `SharedPreferences`.
 
 ---
 
-## 📱 How to Build the APK & Install on Her Phone
+## 📱 How to Build the APK & Install
 
-### 1. Build the APK
+### 1. Build Split-per-ABI Release APK (Compact Size ~25MB)
 Open terminal inside this project folder:
 ```bash
 # Get dependencies
 flutter pub get
 
-# Build Release APK
-flutter build apk --release
-```
-Your compiled APK will be created at:
-`build/app/outputs/flutter-apk/app-release.apk`
+# Code analysis (must show 0 errors)
+flutter analyze
 
-*(Optional)* To create a smaller, device-optimized APK:
-```bash
-flutter build apk --split-per-abi
+# Build split APKs
+flutter build apk --release --split-per-abi
 ```
-
-### 2. Install on Her Phone
-- **Method A (USB / ADB):** Connect her phone with USB Debugging enabled:
-  ```bash
-  adb install build/app/outputs/flutter-apk/app-release.apk
-  ```
-- **Method B (WhatsApp / Telegram / Drive):**
-  Send `app-release.apk` to her phone via WhatsApp or Google Drive. On her phone, tap the file and select **Install** (allow "Install from unknown sources" if prompted).
+The recommended ARM64 APK will be created at:
+`build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` (approx. 25MB).
 
 ---
 
 ## ⚡ Critical Battery Optimization Whitelisting (By Manufacturer)
 
-To guarantee that Android doesn't kill the alarms when the phone is locked or deep-sleeping, perform these steps once on her phone:
+To guarantee that Android doesn't kill the alarms or notifications when the phone is locked or deep-sleeping, perform these steps on both phones:
 
 ### 1. In-App Exemption Prompt
 Open **Do It Now > Settings > Battery Guide & Whitelist ⚡** and tap **Request Whitelist**. Tap **Allow** on the Android system popup.
@@ -113,18 +130,3 @@ Open **Do It Now > Settings > Battery Guide & Whitelist ⚡** and tap **Request 
 #### 🔹 OnePlus (OxygenOS)
 1. Go to **Settings > Battery > Battery optimization > Do It Now > Select "Don't optimize"**.
 2. In recent apps tray, tap the 3 dots on *Do It Now* and tap **Lock** so it remains protected in memory.
-
----
-
-## 🧪 Testing Alarms & Boot Reschedule
-
-1. **Test Alarm (Immediate):**
-   - Tap the notification bell icon on the Home screen header or go to **Settings > Test Alarm (4s)**.
-   - Lock your screen immediately.
-   - Within 4 seconds, the full-screen alarm overlay will turn on the screen with sound, vibration, and your photo.
-2. **App Closed Test:**
-   - Schedule a medicine 2 minutes from the current time in **Add Medicine**.
-   - Swipe away (kill) *Do It Now* from Recent Apps.
-   - Turn off screen and wait for the alarm to ring.
-3. **Phone Reboot Test:**
-   - Restart the phone. The `ScheduledNotificationBootReceiver` declared in `AndroidManifest.xml` triggers automatically upon `BOOT_COMPLETED` and recalculates upcoming dose schedules without needing to open the app!

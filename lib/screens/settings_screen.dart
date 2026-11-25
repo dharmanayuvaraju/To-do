@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/storage_service.dart';
 import '../services/quote_service.dart';
 import '../services/notification_service.dart';
 import '../services/alarm_service.dart';
+import '../services/partner_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/date_utils.dart';
 import '../utils/battery_optimizer_helper.dart';
@@ -21,6 +24,47 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final StorageService _storage = StorageService();
   bool _isPhoneVisible = false;
+
+  // Partner Alerts state
+  String _partnerRole = 'taker'; // 'taker' or 'receiver'
+  String _pairCode = '';
+  String? _savedKeyEmail;
+  bool _partnerAlertsEnabled = true;
+  String _partnerName = 'She';
+  bool _includeMedName = false;
+  bool _alertMissed = true;
+  bool _isPairCodeVisible = false;
+  final TextEditingController _pairCodeCtrl = TextEditingController();
+  final TextEditingController _partnerNameCtrl = TextEditingController();
+  final TextEditingController _senderKeyCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPartnerSettings();
+  }
+
+  Future<void> _loadPartnerSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedKey = prefs.getString(PartnerService.keySenderKey);
+    String? email;
+    if (savedKey != null && savedKey.isNotEmpty) {
+      final valid = PartnerService.validateSenderKey(savedKey);
+      email = valid?['client_email'] as String?;
+    }
+
+    setState(() {
+      _partnerRole = prefs.getString(PartnerService.keyRole) ?? 'taker';
+      _pairCode = prefs.getString(PartnerService.keyPairCode) ?? '';
+      _savedKeyEmail = email;
+      _partnerAlertsEnabled = prefs.getBool(PartnerService.keyAlertsEnabled) ?? true;
+      _partnerName = prefs.getString(PartnerService.keyPartnerName) ?? 'She';
+      _includeMedName = prefs.getBool(PartnerService.keyIncludeMedName) ?? false;
+      _alertMissed = prefs.getBool(PartnerService.keyAlertMissed) ?? true;
+      _pairCodeCtrl.text = _pairCode;
+      _partnerNameCtrl.text = _partnerName;
+    });
+  }
 
   void _showEditNamesDialog() {
     final herCtrl = TextEditingController(text: _storage.herName);
@@ -154,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: isDark ? AppColors.nightPlum : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDark ? Colors.white12 : AppColors.blushPink.withOpacity(0.5),
+                            color: isDark ? Colors.white12 : AppColors.blushPink.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Row(
@@ -345,6 +389,387 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return '$prefix••••••$last2 (Hidden 🔒)';
   }
 
+  Widget _buildPartnerAlertsSection(bool isDark) {
+    final bool isReceiver = _partnerRole == 'receiver';
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.favorite_rounded, color: AppColors.roseGold, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Partner Alerts (FCM Push)',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.blushPink : AppColors.deepPlum,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'When SHE taps Taken, HE gets an instant push on his phone.',
+            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 12),
+
+          // Role Selector: Taker vs Receiver
+          Text(
+            'Who is using this phone?',
+            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('I take medicine (Her)'),
+                  selected: !isReceiver,
+                  selectedColor: AppColors.blushPink.withValues(alpha: 0.35),
+                  onSelected: (selected) async {
+                    if (selected) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString(PartnerService.keyRole, 'taker');
+                      setState(() {
+                        _partnerRole = 'taker';
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('I get alerts (His)'),
+                  selected: isReceiver,
+                  selectedColor: AppColors.lavender.withValues(alpha: 0.35),
+                  onSelected: (selected) async {
+                    if (selected) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString(PartnerService.keyRole, 'receiver');
+                      setState(() {
+                        _partnerRole = 'receiver';
+                      });
+                      await PartnerService.initReceiver();
+                      await _loadPartnerSettings();
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          const Divider(height: 24),
+
+          if (isReceiver) ...[
+            // HIS PHONE: Alert Receiver View
+            Text(
+              'His Alert Code (Share this with Her):',
+              style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white24),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _pairCode.isEmpty
+                          ? 'Generating code...'
+                          : (_isPairCodeVisible
+                              ? _pairCode
+                              : (_pairCode.length > 8
+                                  ? '${_pairCode.substring(0, 8)}••••••••••••••••••••••••'
+                                  : '••••')),
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isPairCodeVisible ? Icons.visibility_off : Icons.visibility,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPairCodeVisible = !_isPairCodeVisible;
+                      });
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: () {
+                      if (_pairCode.isNotEmpty) {
+                        Clipboard.setData(ClipboardData(text: _pairCode));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Pair code copied to clipboard!')),
+                        );
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.share, size: 18),
+                    onPressed: () {
+                      if (_pairCode.isNotEmpty) {
+                        Share.share('Do It Now pair code: $_pairCode');
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '⚠️ Anyone with this code can read your device token; do not share it.',
+              style: GoogleFonts.poppins(fontSize: 10, color: Colors.orange[800]),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Regenerate code', style: TextStyle(fontSize: 12)),
+                  onPressed: () async {
+                    final newCode = await PartnerService.regenerateReceiverCode();
+                    setState(() {
+                      _pairCode = newCode;
+                    });
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('New pair code generated!')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ] else ...[
+            // HER PHONE: Medicine Taker View
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Notify my partner when I take medicine', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+              value: _partnerAlertsEnabled,
+              activeTrackColor: AppColors.roseGold,
+              onChanged: (val) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(PartnerService.keyAlertsEnabled, val);
+                setState(() {
+                  _partnerAlertsEnabled = val;
+                });
+              },
+            ),
+            TextField(
+              controller: _partnerNameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Her Name shown in alert',
+                hintText: 'e.g. Papa or She',
+              ),
+              onChanged: (val) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString(PartnerService.keyPartnerName, val.trim().isEmpty ? 'She' : val.trim());
+              },
+            ),
+            const SizedBox(height: 10),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Include medicine name in alert', style: GoogleFonts.poppins(fontSize: 12)),
+              subtitle: Text('Shows tablet name in the notification', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+              value: _includeMedName,
+              activeTrackColor: AppColors.blushPink,
+              onChanged: (val) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(PartnerService.keyIncludeMedName, val);
+                setState(() {
+                  _includeMedName = val;
+                });
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Alert when dose is missed (60m)', style: GoogleFonts.poppins(fontSize: 12)),
+              value: _alertMissed,
+              activeTrackColor: AppColors.blushPink,
+              onChanged: (val) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(PartnerService.keyAlertMissed, val);
+                setState(() {
+                  _alertMissed = val;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            Text('His Pair Code:', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _pairCodeCtrl,
+              decoration: const InputDecoration(
+                hintText: 'Paste his code (starts with dn...)',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Sender Key (paste the JSON):', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            if (_savedKeyEmail != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.mintSuccess.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.mintSuccess),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: AppColors.mintSuccess, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Key saved for: $_savedKeyEmail',
+                        style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.remove(PartnerService.keySenderKey);
+                        setState(() {
+                          _savedKeyEmail = null;
+                          _senderKeyCtrl.clear();
+                        });
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Sender key removed.')),
+                          );
+                        }
+                      },
+                      child: const Text('Remove', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              TextField(
+                controller: _senderKeyCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Paste the entire service account .json here...',
+                  hintStyle: const TextStyle(fontSize: 11),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.blushPink,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              ),
+              onPressed: () async {
+                final code = _pairCodeCtrl.text.trim();
+                final keyText = _senderKeyCtrl.text.trim();
+                final prefs = await SharedPreferences.getInstance();
+
+                if (code.isNotEmpty) {
+                  if (!PartnerService.isValidPairCode(code)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invalid code! Must start with dn and be 34+ characters.')),
+                    );
+                    return;
+                  }
+                  await prefs.setString(PartnerService.keyPairCode, code);
+                  setState(() {
+                    _pairCode = code;
+                  });
+
+                  final token = await PartnerService.fetchReceiverToken(code);
+                  if (token == null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Code not found, check the code or ask him to open the app once.')),
+                    );
+                  }
+                }
+
+                if (keyText.isNotEmpty) {
+                  final valid = PartnerService.validateSenderKey(keyText);
+                  if (valid == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invalid JSON! Must contain type: service_account, project_id, client_email and private_key.')),
+                    );
+                    return;
+                  }
+                  await prefs.setString(PartnerService.keySenderKey, keyText);
+                  setState(() {
+                    _savedKeyEmail = valid['client_email'] as String?;
+                    _senderKeyCtrl.clear();
+                  });
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Partner alert settings saved! ❤️')),
+                  );
+                }
+              },
+              child: Text('Save Settings', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.deepPlum)),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.send_rounded, size: 16),
+                label: Text(
+                  'Send test alert to his phone',
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () async {
+                  final ok = await PartnerService.sendTestAlert();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(ok
+                            ? 'Test alert sent! His phone should show "Test alert" within seconds ❤️'
+                            : 'Could not send test alert. Please verify pair code, sender key, and internet.'),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 8),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text('3-Step Setup Instructions', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.roseGold)),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('1. Install the same APK on both phones.', style: GoogleFonts.poppins(fontSize: 11)),
+                    const SizedBox(height: 4),
+                    Text('2. On his phone: choose "I get alerts", tap Share to send the code to her on WhatsApp.', style: GoogleFonts.poppins(fontSize: 11)),
+                    const SizedBox(height: 4),
+                    Text('3. On her phone: paste the code above, tap Save, and tap "Send test alert". Done!', style: GoogleFonts.poppins(fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -432,6 +857,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 16),
 
+          // PARTNER ALERTS SECTION (FCM Push)
+          _buildPartnerAlertsSection(isDark),
+
+          const SizedBox(height: 16),
+
           // Medicine Reminders Section (Manage & Add Reminders)
           GlassContainer(
             padding: const EdgeInsets.all(16),
@@ -500,7 +930,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.nightPlum : Colors.white.withOpacity(0.8),
+                        color: isDark ? AppColors.nightPlum : Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: Colors.white24),
                       ),
@@ -593,13 +1023,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: _storage.photoStyle == 'nature'
-                          ? AppColors.mintSuccess.withOpacity(0.2)
+                          ? AppColors.mintSuccess.withValues(alpha: 0.2)
                           : (isDark ? Colors.white10 : Colors.white70),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: _storage.photoStyle == 'nature'
                             ? AppColors.mintSuccess
-                            : Colors.grey.withOpacity(0.3),
+                            : Colors.grey.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -645,13 +1075,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: _storage.photoStyle == 'couple'
-                          ? AppColors.blushPink.withOpacity(0.2)
+                          ? AppColors.blushPink.withValues(alpha: 0.2)
                           : (isDark ? Colors.white10 : Colors.white70),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: _storage.photoStyle == 'couple'
                             ? AppColors.roseGold
-                            : Colors.grey.withOpacity(0.3),
+                            : Colors.grey.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -699,7 +1129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey[600]),
                   ),
                   value: _storage.lockScreenPrivacy,
-                  activeColor: AppColors.mintSuccess,
+                  activeTrackColor: AppColors.mintSuccess,
                   onChanged: (val) async {
                     await _storage.setLockScreenPrivacy(val);
                     setState(() {});
@@ -738,7 +1168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: isDark ? Colors.white10 : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.blushPink.withOpacity(0.5)),
+                    border: Border.all(color: AppColors.blushPink.withValues(alpha: 0.5)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -789,7 +1219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: Text('Vibration', style: GoogleFonts.poppins(fontSize: 13)),
                   value: _storage.isVibrationEnabled,
-                  activeColor: AppColors.roseGold,
+                  activeTrackColor: AppColors.roseGold,
                   onChanged: (val) => _storage.toggleVibration(val),
                 ),
 
@@ -798,7 +1228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: Text('Sound', style: GoogleFonts.poppins(fontSize: 13)),
                   value: _storage.isSoundEnabled,
-                  activeColor: AppColors.roseGold,
+                  activeTrackColor: AppColors.roseGold,
                   onChanged: (val) => _storage.toggleSound(val),
                 ),
 

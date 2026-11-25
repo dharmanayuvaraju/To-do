@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/medicine.dart';
 import '../models/medicine_log.dart';
@@ -50,15 +49,15 @@ class MedicineCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: cardAccentColor.withOpacity(0.25),
+                  color: cardAccentColor.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: cardAccentColor.withOpacity(0.6),
+                    color: cardAccentColor.withValues(alpha: 0.6),
                     width: 1.5,
                   ),
                 ),
-                child: Center(
-                  child: const Icon(
+                child: const Center(
+                  child: Icon(
                     Icons.alarm_on_rounded,
                     color: AppColors.crimsonLove,
                     size: 24,
@@ -111,7 +110,7 @@ class MedicineCard extends StatelessWidget {
               PopupMenuButton<String>(
                 icon: Icon(
                   Icons.more_vert,
-                  color: isDark ? Colors.white70 : AppColors.deepPlum.withOpacity(0.6),
+                  color: isDark ? Colors.white70 : AppColors.deepPlum.withValues(alpha: 0.6),
                 ),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 onSelected: (val) {
@@ -193,7 +192,7 @@ class MedicineCard extends StatelessWidget {
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.mintSuccess.withOpacity(0.2),
+                      color: AppColors.mintSuccess.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.mintSuccess),
                     ),
@@ -227,7 +226,7 @@ class MedicineCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF7E9E).withOpacity(0.4),
+                            color: const Color(0xFFFF7E9E).withValues(alpha: 0.4),
                             blurRadius: 14,
                             offset: const Offset(0, 4),
                           ),
@@ -260,7 +259,7 @@ class MedicineCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: bg.withOpacity(0.85),
+        color: bg.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

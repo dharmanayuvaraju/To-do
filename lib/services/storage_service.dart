@@ -5,7 +5,6 @@ import '../models/medicine.dart';
 import '../models/medicine_log.dart';
 import '../models/telugu_quote.dart';
 import '../utils/constants.dart';
-import '../utils/date_utils.dart';
 
 class StorageService extends ChangeNotifier {
   static final StorageService _instance = StorageService._internal();
@@ -34,6 +33,14 @@ class StorageService extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   List<Medicine> get medicines => List.unmodifiable(_medicines);
   List<MedicineLog> get logs => List.unmodifiable(_logs);
+  List<MedicineLog> get todayLogs {
+    final now = DateTime.now();
+    return _logs.where((l) =>
+      l.scheduledTime.year == now.year &&
+      l.scheduledTime.month == now.month &&
+      l.scheduledTime.day == now.day
+    ).toList();
+  }
   List<TeluguQuote> get customQuotes => List.unmodifiable(_customQuotes);
   String get herName => _herName;
   String get myName => _myName;

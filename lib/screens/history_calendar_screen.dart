@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../models/medicine_log.dart';
 import '../services/storage_service.dart';
 import '../utils/app_colors.dart';
-import '../utils/date_utils.dart';
 import '../widgets/glass_container.dart';
 
 class HistoryCalendarScreen extends StatefulWidget {
@@ -230,7 +228,7 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
                             gradient: isSelected ? AppColors.heartButtonGradient : null,
                             color: isSelected
                                 ? null
-                                : (isDark ? Colors.white10 : Colors.black.withOpacity(0.04)),
+                                : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
                               color: isSelected
@@ -356,7 +354,7 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
                                 : isMissed
                                     ? AppColors.statusMissed
                                     : AppColors.statusSnoozed)
-                            .withOpacity(0.2),
+                            .withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -420,7 +418,7 @@ class _HistoryCalendarScreenState extends State<HistoryCalendarScreen> {
                                 : isMissed
                                     ? AppColors.statusMissed
                                     : AppColors.statusSnoozed)
-                            .withOpacity(0.15),
+                            .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

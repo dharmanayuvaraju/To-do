@@ -90,7 +90,7 @@ class _CelebrationWidgetState extends State<_CelebrationWidget>
     final size = MediaQuery.of(context).size;
 
     return Material(
-      color: Colors.black.withOpacity(0.35),
+      color: Colors.black.withValues(alpha: 0.35),
       child: GestureDetector(
         onTap: widget.onDismiss,
         child: Stack(
@@ -142,7 +142,7 @@ class _CelebrationWidgetState extends State<_CelebrationWidget>
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.roseGold.withOpacity(0.4),
+                      color: AppColors.roseGold.withValues(alpha: 0.4),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),
@@ -160,7 +160,7 @@ class _CelebrationWidgetState extends State<_CelebrationWidget>
                       width: 90,
                       height: 90,
                       decoration: BoxDecoration(
-                        color: AppColors.blushPink.withOpacity(0.4),
+                        color: AppColors.blushPink.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: Colors.white,

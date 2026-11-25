@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.blushPink.withOpacity(0.7),
+                            color: AppColors.blushPink.withValues(alpha: 0.7),
                             blurRadius: 35,
                             spreadRadius: 8,
                           ),
@@ -108,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/hero_star.jpg',
+                          'assets/images/me.jpg',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Image.asset(
                             'assets/images/me.jpg',
@@ -171,10 +171,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.blushPink.withOpacity(0.5),
+                      color: AppColors.blushPink.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Text(

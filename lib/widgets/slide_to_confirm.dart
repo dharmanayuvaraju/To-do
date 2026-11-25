@@ -34,10 +34,10 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
         return Container(
           height: widget.height,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),
@@ -54,7 +54,7 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ),
@@ -68,7 +68,7 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                 width: _position + widget.height,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.mintSuccess.withOpacity(0.35),
+                    color: AppColors.mintSuccess.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(widget.borderRadius),
                   ),
                 ),
@@ -104,7 +104,7 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF7E9E).withOpacity(0.5),
+                          color: const Color(0xFFFF7E9E).withValues(alpha: 0.5),
                           blurRadius: 12,
                           offset: const Offset(0, 2),
                         ),

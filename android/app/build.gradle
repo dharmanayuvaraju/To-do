@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
 
 def localProperties = new Properties()
@@ -23,8 +24,8 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.maa_madhuram"
-    compileSdk 35
+    namespace "com.a3y.doitnow"
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -42,17 +43,32 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.maa_madhuram"
+        applicationId "com.a3y.doitnow"
         minSdkVersion 23
-        targetSdkVersion 35
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            if (file('release-keystore.jks').exists()) {
+                storeFile file('release-keystore.jks')
+                storePassword 'doitnowkey123'
+                keyAlias 'doitnow'
+                keyPassword 'doitnowkey123'
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            if (file('release-keystore.jks').exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
             minifyEnabled false
             shrinkResources false
         }

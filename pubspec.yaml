@@ -20,6 +20,12 @@ dependencies:
   vibration: ^2.0.1
   share_plus: ^10.1.1
   permission_handler: ^11.3.1
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.1.6
+  firebase_database: ^11.1.6
+  firebase_auth: ^5.3.4
+  http: ^1.2.2
+  googleapis_auth: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +39,12 @@ flutter:
     - assets/images/
     - assets/quotes.json
     - assets/audio/
+    - assets/fonts/
+
+  fonts:
+    - family: Noto Sans Telugu
+      fonts:
+        - asset: assets/fonts/NotoSansTelugu-Regular.ttf
+    - family: Ramabhadra
+      fonts:
+        - asset: assets/fonts/Ramabhadra-Regular.ttf

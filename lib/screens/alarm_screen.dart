@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/alarm_service.dart';
+import '../services/partner_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/date_utils.dart';
 import '../widgets/slide_to_confirm.dart';
@@ -46,7 +48,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   void _startAlertEffects() async {
-    // Gentle vibration pattern if enabled
     if (_storage.isVibrationEnabled) {
       final hasVibrator = await Vibration.hasVibrator();
       if (hasVibrator == true) {
@@ -82,15 +83,24 @@ class _AlarmScreenState extends State<AlarmScreen> {
       widget.scheduledTime.minute,
     );
 
+    // 1. Mark as taken in storage
     await _storage.markAsTaken(
       medicineId: widget.medicineId,
       medicineName: widget.medicineName,
       scheduledTime: todaySlot,
     );
 
-    // Cancel repeating notification cascade for today
-    await NotificationService().cancelMedicineReminders(widget.medicineId);
+    // 2. Cancel repeating notification cascade for today
+    await NotificationService().cancelTodayCascades(widget.medicineId, todaySlot);
     await AlarmService().syncAndRescheduleAll();
+
+    // 3. Send Partner Alert
+    unawaited(PartnerService.sendEvent(
+      'taken',
+      med: widget.medicineName,
+      medId: widget.medicineId,
+      scheduledTime: todaySlot,
+    ));
 
     if (mounted) {
       FloatingHeartsOverlay.show(
@@ -146,7 +156,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -217,6 +227,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
       snoozeMinutes: _storage.snoozeDurationMinutes,
     );
 
+    // Send Partner Alert
+    unawaited(PartnerService.sendEvent(
+      'snooze',
+      med: widget.medicineName,
+      medId: widget.medicineId,
+      scheduledTime: todaySlot,
+    ));
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -233,13 +251,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final useNature = _storage.photoStyle == 'nature';
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background (Discreet Serene Nature OR Couple Photo based on Privacy setting)
+          // Background
           Positioned.fill(
             child: useNature
                 ? Container(
@@ -254,10 +271,10 @@ class _AlarmScreenState extends State<AlarmScreen> {
                         end: Alignment.bottomCenter,
                       ),
                     ),
-                    child: Center(
+                    child: const Center(
                       child: Opacity(
                         opacity: 0.12,
-                        child: const Icon(
+                        child: Icon(
                           Icons.spa_rounded,
                           size: 320,
                           color: AppColors.mintSuccess,
@@ -266,20 +283,16 @@ class _AlarmScreenState extends State<AlarmScreen> {
                     ),
                   )
                 : Image.asset(
-                    'assets/images/hero_star.jpg',
+                    'assets/images/me.jpg',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Image.asset(
                       'assets/images/together.jpg',
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Image.asset(
-                        'assets/images/me.jpg',
-                        fit: BoxFit.cover,
-                      ),
                     ),
                   ),
           ),
 
-          // Soft Romantic Gradient Overlay (Deep Plum & Blush Pink)
+          // Romantic Gradient Overlay
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -287,7 +300,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   colors: [
                     const Color(0xCC3B2A4D),
                     const Color(0xEE1B1528),
-                    AppColors.nightIndigo.withOpacity(0.95),
+                    AppColors.nightIndigo.withValues(alpha: 0.95),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -303,7 +316,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top Section: Time & Pulse Alarm Bell
+                  // Top Section: Time & Photo Avatar
                   Column(
                     children: [
                       const SizedBox(height: 12),
@@ -313,7 +326,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: Colors.white24),
                             ),
@@ -340,54 +353,55 @@ class _AlarmScreenState extends State<AlarmScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Circular Photo Avatar (Nature or Couple)
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: useNature ? AppColors.mintSuccess : AppColors.blushPink,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (useNature ? AppColors.mintSuccess : AppColors.roseGold).withOpacity(0.5),
-                              blurRadius: 20,
-                              spreadRadius: 4,
+                      RepaintBoundary(
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: useNature ? AppColors.mintSuccess : AppColors.blushPink,
+                              width: 3,
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: useNature
-                              ? Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFFA8E6CF), Color(0xFFCDB4F6)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (useNature ? AppColors.mintSuccess : AppColors.roseGold).withValues(alpha: 0.5),
+                                blurRadius: 20,
+                                spreadRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: useNature
+                                ? Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Color(0xFFA8E6CF), Color(0xFFCDB4F6)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                     ),
+                                    child: const Center(
+                                      child: Icon(Icons.spa_rounded, color: Colors.white, size: 50),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    'assets/images/me.jpg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Image.asset('assets/images/together.jpg', fit: BoxFit.cover),
                                   ),
-                                  child: const Center(
-                                    child: Icon(Icons.spa_rounded, color: Colors.white, size: 50),
-                                  ),
-                                )
-                              : Image.asset(
-                                  'assets/images/hero_star.jpg',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Image.asset('assets/images/me.jpg', fit: BoxFit.cover),
-                                ),
-                        ),
-                      )
-                          .animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scale(begin: const Offset(1, 1), end: const Offset(1.06, 1.06), duration: 1.5.seconds),
+                          ),
+                        )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(begin: const Offset(1, 1), end: const Offset(1.06, 1.06), duration: 1.5.seconds),
+                      ),
                       if (useNature) ...[
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -406,14 +420,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
                     ],
                   ),
 
-                  // Middle Section: Telugu Quote in Large Text + Medicine Info
+                  // Middle Section: Telugu Quote + Medicine Info
                   Column(
                     children: [
-                      // Large Telugu Quote
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: Colors.white24),
                         ),
@@ -437,13 +450,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
                       const SizedBox(height: 24),
 
-                      // Medicine Details Pill
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.nightPlum.withOpacity(0.8),
+                          color: AppColors.nightPlum.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.lavender.withOpacity(0.4)),
+                          border: Border.all(color: AppColors.lavender.withValues(alpha: 0.4)),
                         ),
                         child: Column(
                           children: [
@@ -487,7 +499,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   // Bottom Section: Slide-to-Take + Snooze Action + Message Babu
                   Column(
                     children: [
-                      // Swipe right to confirm slider
                       SlideToConfirm(
                         onConfirmed: _onTaken,
                         text: 'Slide to take ❤️',
@@ -503,7 +514,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                               onPressed: _onSnooze,
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
-                                backgroundColor: Colors.white.withOpacity(0.12),
+                                backgroundColor: Colors.white.withValues(alpha: 0.12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                               icon: const Icon(Icons.snooze_rounded, color: AppColors.pastelYellow, size: 18),
@@ -525,20 +536,21 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             child: TextButton.icon(
                               onPressed: () {
                                 final phone = _storage.babuPhone;
-                                final text = Uri.encodeComponent(
-                                  "Hey Babu, I'm taking my medicine (${widget.medicineName}) right now! ❤️",
-                                );
-                                final url = phone.isNotEmpty
-                                    ? "https://wa.me/$phone?text=$text"
-                                    : "https://wa.me/?text=$text";
-                                // Launch or share
+                                if (phone.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Please set Babu's WhatsApp number in Settings first ❤️"),
+                                    ),
+                                  );
+                                  return;
+                                }
                                 Share.share(
                                   "Hey Babu, I got the reminder for ${widget.medicineName}! ❤️",
                                 );
                               },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
-                                backgroundColor: const Color(0xFF25D366).withOpacity(0.2),
+                                backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.2),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                               icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF25D366), size: 18),
@@ -566,4 +578,3 @@ class _AlarmScreenState extends State<AlarmScreen> {
     );
   }
 }
-

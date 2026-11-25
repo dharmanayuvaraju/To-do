@@ -76,7 +76,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.deepPlum,
               onPrimary: Colors.white,
               surface: AppColors.cream,
@@ -208,7 +208,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                         hintText: 'What would you like to be reminded of?',
                         hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
                         filled: true,
-                        fillColor: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
+                        fillColor: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -249,7 +249,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                             decoration: InputDecoration(
                               hintText: '1',
                               filled: true,
-                              fillColor: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
+                              fillColor: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.8),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -264,7 +264,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
+                              color: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: DropdownButtonHideUnderline(
@@ -325,7 +325,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                         return Chip(
                           backgroundColor: isDark
                               ? AppColors.nightPlum
-                              : AppColors.lavender.withOpacity(0.3),
+                              : AppColors.lavender.withValues(alpha: 0.3),
                           avatar: const Icon(Icons.access_time_rounded, size: 16, color: AppColors.crimsonLove),
                           label: Text(
                             AppDateUtils.formatTimeOfDay(t),
@@ -442,7 +442,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                               gradient: isSelected ? AppColors.heartButtonGradient : null,
                               color: isSelected
                                   ? null
-                                  : (isDark ? Colors.white12 : Colors.black.withOpacity(0.06)),
+                                  : (isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.transparent
@@ -506,7 +506,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                         hintText: 'Write a sweet note for this reminder...',
                         hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                         filled: true,
-                        fillColor: isDark ? Colors.black26 : Colors.white.withOpacity(0.8),
+                        fillColor: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -554,7 +554,7 @@ class _AddEditMedicineScreenState extends State<AddEditMedicineScreen> {
                               boxShadow: [
                                 if (isChosen)
                                   BoxShadow(
-                                    color: Color(colHex).withOpacity(0.6),
+                                    color: Color(colHex).withValues(alpha: 0.6),
                                     blurRadius: 8,
                                     spreadRadius: 2,
                                   ),

@@ -40,8 +40,8 @@ class GlassContainer extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : AppColors.lavender.withOpacity(0.25),
+                ? Colors.black.withValues(alpha: 0.3)
+                : AppColors.lavender.withValues(alpha: 0.25),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
