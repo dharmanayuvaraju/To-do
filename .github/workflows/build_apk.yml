@@ -30,40 +30,7 @@ jobs:
           if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
             echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
           elif [ ! -f android/app/google-services.json ]; then
-            python3 -c '
-import json
-data = {
-  "project_info": {
-    "project_number": "123456789012",
-    "project_id": "do-it-now-a3y",
-    "storage_bucket": "do-it-now-a3y.appspot.com"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:123456789012:android:abcdef0123456789",
-        "android_client_info": {
-          "package_name": "com.a3y.doitnow"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyFakeKeyForDoItNowBuildVerification123"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
-}
-with open("android/app/google-services.json", "w") as f:
-    json.dump(data, f, indent=2)
-'
+            echo '{"project_info":{"project_number":"123456789012","project_id":"do-it-now-a3y","storage_bucket":"do-it-now-a3y.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789012:android:abcdef0123456789","android_client_info":{"package_name":"com.a3y.doitnow"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyFakeKeyForDoItNowBuildVerification123"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
           fi
 
       - name: Generate release keystore if missing
