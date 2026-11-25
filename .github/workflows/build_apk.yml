@@ -46,7 +46,7 @@ jobs:
         run: flutter analyze
 
       - name: Build Split Release APKs
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
 
       - name: Upload Release APKs
         uses: actions/upload-artifact@v4
