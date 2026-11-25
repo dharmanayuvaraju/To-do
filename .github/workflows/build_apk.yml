@@ -46,7 +46,22 @@ jobs:
         run: flutter analyze
 
       - name: Build Split Release APKs
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
+        run: |
+          set -o pipefail
+          flutter build apk --release --split-per-abi --no-tree-shake-icons 2>&1 | tee build_log.txt
+
+      - name: Print Build Log on Failure
+        if: failure()
+        run: |
+          echo "=== LAST 150 LINES OF BUILD LOG ==="
+          tail -n 150 build_log.txt
+
+      - name: Upload Build Log Artifact on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-log
+          path: build_log.txt
 
       - name: Upload Release APKs
         uses: actions/upload-artifact@v4
