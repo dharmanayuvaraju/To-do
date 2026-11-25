@@ -50,13 +50,13 @@ jobs:
       - name: Build Release APKs
         run: |
           set -o pipefail
-          flutter build apk --release --split-per-abi --no-tree-shake-icons --android-skip-build-dependency-validation -- --stacktrace 2>&1 | tee build_log.txt
+          flutter build apk --release --split-per-abi --no-tree-shake-icons --android-skip-build-dependency-validation -v 2>&1 | tee build_log.txt
 
       - name: Log Failure Diagnostics
         if: failure()
         run: |
-          echo "=== LAST 300 LINES OF BUILD LOG ==="
-          tail -n 300 build_log.txt || true
+          echo "=== LAST 500 LINES OF BUILD LOG ==="
+          tail -n 500 build_log.txt || true
           git config --global user.email "bot@doitnow.app"
           git config --global user.name "Build Bot"
           git checkout -B build-log-debug
