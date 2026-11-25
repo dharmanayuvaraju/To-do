@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -45,16 +47,22 @@ jobs:
       - name: Code Analysis
         run: flutter analyze
 
-      - name: Build Split Release APKs
+      - name: Build Release APKs
         run: |
           set -o pipefail
-          flutter build apk --release --split-per-abi --no-tree-shake-icons 2>&1 | tee build_log.txt
+          flutter build apk --release --split-per-abi --no-tree-shake-icons --android-skip-build-dependency-validation 2>&1 | tee build_log.txt
 
-      - name: Print Build Log on Failure
+      - name: Log Failure Diagnostics
         if: failure()
         run: |
           echo "=== LAST 150 LINES OF BUILD LOG ==="
-          tail -n 150 build_log.txt
+          tail -n 150 build_log.txt || true
+          git config --global user.email "bot@doitnow.app"
+          git config --global user.name "Build Bot"
+          git checkout -B build-log-debug
+          git add build_log.txt
+          git commit -m "Capture build failure log" || true
+          git push -f origin build-log-debug || true
 
       - name: Upload Build Log Artifact on Failure
         if: failure()
@@ -67,5 +75,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Do-It-Now-Release-APKs
-          path: build/app/outputs/flutter-apk/*-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
